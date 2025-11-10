@@ -178,7 +178,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         LaunchH2MCommand = new RelayCommand(LaunchH2M);
         CheckUpdateStatusCommand = new AsyncRelayCommand(CheckUpdateStatusAsync);
         CopyToClipBoardCommand = new RelayCommand<ServerViewModel>(DoCopyToClipBoardCommand);
-        SaveServersCommand = new AsyncRelayCommand(SaveServersAsync);
+        SaveServersCommand = new AsyncRelayCommand(() => SaveServersAsync());
         UpdateLauncherCommand = new AsyncRelayCommand(DoUpdateLauncherCommand, () => UpdateStatusText != "");
         OpenReleaseNotesCommand = new RelayCommand(DoOpenReleaseNotesCommand);
         RestartCommand = new RelayCommand(DoRestartCommand);
@@ -639,22 +639,23 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         return AdvancedServerFilter.ApplyFilter(server);
     }
 
-    private async Task SaveServersAsync()
+    private async Task SaveServersAsync(IServerTabViewModel? tab = null)
     {
         // Create a list of "Ip:Port" strings
-        List<string> ipPortList = SelectedTab.Servers.Where(ServerFilter)
-                                         .Select(server => $"{server.Ip}:{server.Port}")
-                                         .ToList();
+        string[] ipPortList = (tab ?? SelectedTab).Servers
+            .Where(ServerFilter)
+            .Select(server => $"{server.Ip}:{server.Port}")
+            .ToArray();
 
         // Serialize the list into JSON format
-        string jsonString = JsonSerializer.Serialize(ipPortList, JsonContext.Default.ListString);
+        string txtString = string.Join('\n', ipPortList);
 
         try
         {
             // Store the server list into the corresponding directory
-            _logger.LogDebug("Storing server list into \"/players2/favourites.json\"");
+            _logger.LogDebug("Storing server list into \"/t7x/players/user/favorite_servers.txt\"");
 
-            string directoryPath = "players2";
+            string directoryPath = "t7x\\players\\user";
 
             if (!string.IsNullOrEmpty(_h2MLauncherOptions.CurrentValue.GameLocation))
             {
@@ -668,24 +669,25 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             if (!Directory.Exists(directoryPath))
             {
                 // let user choose
-                fileName = await _saveFileService.SaveFileAs("favourites.json", "JSON file (*.json)|*.json") ?? "";
+                fileName = await _saveFileService.SaveFileAs("favorite_servers.txt", "Text file (*.txt)|*.txt") ?? "";
                 if (string.IsNullOrEmpty(fileName))
                     return;
             }
             else
             {
-                fileName = Path.Combine(directoryPath, "favourites.json");
+                fileName = Path.Combine(directoryPath, "favorite_servers.txt");
             }
 
-            await File.WriteAllTextAsync(fileName, jsonString);
+            await File.WriteAllTextAsync(fileName, txtString);
 
             _logger.LogInformation("Stored server list into {fileName}", fileName);
 
-            StatusText = $"{ipPortList.Count} servers saved to {Path.GetFileName(fileName)}";
+            StatusText = $"{ipPortList.Length} servers saved to {Path.GetFileName(fileName)}";
         }
         catch (Exception ex)
         {
-            _errorHandlingService.HandleException(ex, "Could not save favourites.json file. Make sure the exe is inside the root of the game folder.");
+            _errorHandlingService.HandleException(ex,
+                "Could not save favorite_servers.txt file. Make sure the exe is inside the root of the game folder.");
         }
     }
 

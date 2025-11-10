@@ -203,6 +203,11 @@ namespace H2MLauncher.Core.Services
                         return null;
                     }
 
+                    if (info.Get("challenge") != response.Request.Message.Data)
+                    {
+                        return null;
+                    }
+
                     GameServerInfo serverInfo = new()
                     {
                         Address = response.RemoteEndPoint,
