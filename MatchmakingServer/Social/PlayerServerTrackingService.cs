@@ -137,6 +137,12 @@ public class PlayerServerTrackingService : BackgroundService, IPlayerServerTrack
                     cancellationToken: cancellationToken)
                 .ToListAsync(cancellationToken);
 
+            await _gameServerService.GetServerStatusAsync(
+                    gameServers: refreshedServers, 
+                    maxAge: TrackingServerStatusMaxAge, 
+                    cancellationToken: cancellationToken)
+                .ToArrayAsync(cancellationToken);
+
             _logger.LogInformation("Refreshed info for tracked servers ({numRefreshed} / {numTrackedServers} responding).",
                 refreshedServers.Count, _trackedGameServers.Count);
 
@@ -161,10 +167,12 @@ public class PlayerServerTrackingService : BackgroundService, IPlayerServerTrack
                     continue;
                 }
 
+                if (server.LastStatusResponse is null) continue;
+
                 // Verify players still on server
                 foreach (Player player in server.KnownPlayers.Keys)
                 {
-                    if (!server.LastServerInfo.Players.Any(p => p.PlayerName == player.Name))
+                    if (!server.LastStatusResponse.Players.Any(p => p.PlayerName == player.Name))
                     {
                         // Player not on server anymore (TODO: check what happens with name changes)
                         await RemovePlayerFromServer(player, server);
@@ -304,7 +312,7 @@ public class PlayerServerTrackingService : BackgroundService, IPlayerServerTrack
                     connectedServerInfo.ServerName);
             }).ToList();
 
-            List<GameServer> respondingServers = await _gameServerService.RefreshInfoAsync(
+            List<GameServer> respondingServers = await _gameServerService.RefreshInfoAndStatusAsync(
                 gameServersMatchingIp,
                 timeoutInMs: 5000,
                 cancellationToken);
@@ -355,8 +363,8 @@ public class PlayerServerTrackingService : BackgroundService, IPlayerServerTrack
 
             _logger.LogTrace("Matching server {server}: {hostName} | {players}", 
                 s, 
-                s.LastServerInfo?.Players.Select(p => p.PlayerName), 
-                s.LastServerInfo?.HostName);
+                s.LastServerInfo?.HostName,
+                s.LastStatusResponse?.Players.Select(p => p.PlayerName));
 
             //if (s.LastStatusResponse is not null &&
             //    s.LastStatusResponse.Players.Any(p => p.PlayerName.Equals(player.Name)))
@@ -369,12 +377,12 @@ public class PlayerServerTrackingService : BackgroundService, IPlayerServerTrack
             //    return 0;
             //}            
 
-            if (s.LastServerInfo is not null &&
-                s.LastServerInfo.Players.Any(p => p.PlayerName.Equals(player.Name)))
+            if (s.LastStatusResponse is not null &&
+                s.LastStatusResponse.Players.Any(p => p.PlayerName.Equals(player.Name)))
             {
                 score += 2;
             }
-            else if (s.LastServerInfo is not null && ServerMatchingRequirePlayerNameConfirmation)
+            else if (s.LastStatusResponse is not null && ServerMatchingRequirePlayerNameConfirmation)
             {
                 // player name could not be confirmed
                 return 0;

@@ -4,7 +4,7 @@ namespace H2MLauncher.Core.Game
 {
     public interface IGameConfigProvider
     {
-        public ConfigMpContent? CurrentConfigMp { get; }
+        public ConfigIniContent? CurrentConfig { get; }
 
         public event ConfigChangedEventHandler? ConfigMpChanged;
     }

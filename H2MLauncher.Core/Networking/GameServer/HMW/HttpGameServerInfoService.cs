@@ -274,7 +274,7 @@ namespace H2MLauncher.Core.Networking.GameServer.HMW
                 MapName = info.MapName,
                 PlayMode = info.PlayMode,
                 Protocol = info.Protocol,
-                Players = info.Players.Select(p => new GamePlayerStatus(0, p.Ping, p.Name)).ToArray(),
+                //Players = info.Players.Select(p => new GamePlayerStatus(0, p.Ping, p.Name)).ToArray(),
                 Ping = ping,
             };
         }

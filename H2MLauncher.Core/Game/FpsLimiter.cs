@@ -344,12 +344,12 @@ public sealed class FpsLimiter : IDisposable
     private static IObservable<int> CreateMaxFpsObservable(GameDirectoryService gameDirectoryService)
     {
         return Observable
-            .FromEvent<ConfigChangedEventHandler, ConfigMpContent?>(
+            .FromEvent<ConfigChangedEventHandler, ConfigIniContent?>(
                 (a) => (filePath, cfg) => a(cfg),
                 (h) => gameDirectoryService.ConfigMpChanged += h,
                 (h) => gameDirectoryService.ConfigMpChanged -= h
             )
-            .StartWith(gameDirectoryService.CurrentConfigMp)
+            .StartWith(gameDirectoryService.CurrentConfig)
             .Where(cfg => cfg is not null)
             .Select(cfg => cfg!.MaxFps)
             .DistinctUntilChanged();

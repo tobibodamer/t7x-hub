@@ -39,7 +39,7 @@ namespace H2MLauncher.UI.ViewModels;
 public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<SelectServerMessage>, IDisposable
 {
     private readonly IMasterServerService _masterServerService;
-    private readonly IGameServerInfoService<IServerConnectionDetails> _tcpGameServerCommunicationService;
+    private readonly IGameServerInfoService<IServerConnectionDetails> _gameServerCommunicationService;
     private readonly T7XCommunicationService _h2MCommunicationService;
     private readonly LauncherService _h2MLauncherService;
     private readonly IClipBoardService _clipBoardService;
@@ -136,7 +136,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
     public ServerBrowserViewModel(
         [FromKeyedServices("T7X")] IMasterServerService masterServerService,
-        [FromKeyedServices("UDP")] IGameServerInfoService<IServerConnectionDetails> tcpGameServerService,
+        [FromKeyedServices("UDP")] IGameServerInfoService<IServerConnectionDetails> udpGameServerInfoService,
         T7XCommunicationService h2MCommunicationService,
         LauncherService h2MLauncherService,
         IClipBoardService clipBoardService,
@@ -156,7 +156,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         SocialOverviewViewModel socialOverviewViewModel)
     {
         _masterServerService = masterServerService;
-        _tcpGameServerCommunicationService = tcpGameServerService;
+        _gameServerCommunicationService = udpGameServerInfoService;
         _h2MCommunicationService = h2MCommunicationService;
         _h2MLauncherService = h2MLauncherService;
         _clipBoardService = clipBoardService;
@@ -748,9 +748,10 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         {
             StatusText = "Refreshing servers...";
 
-            AllServersTab.Servers.Clear();
-            FavouritesTab.Servers.Clear();
-            RecentsTab.Servers.Clear();
+            foreach (var tab in ServerTabs.OfType<ServerTabViewModel>())
+            {
+                tab.Servers.Clear();
+            }
 
             // Get servers from the master(s)
 
@@ -758,7 +759,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
                 .ToObservable()
                 .Buffer(TimeSpan.FromSeconds(0.5))
                 .Where(batch => batch.Count > 0)
-                .Select(batch => GetServerInfo(_tcpGameServerCommunicationService, batch, linkedCancellation.Token))
+                .Select(batch => GetServerInfo(_gameServerCommunicationService, batch, linkedCancellation.Token))
                 .ToArray();
 
             await Task.WhenAll(serverInfoTasks);

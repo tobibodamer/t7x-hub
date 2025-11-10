@@ -22,7 +22,7 @@ namespace H2MLauncher.Core.Game
             _installedMaps = [];
             InstalledMaps = _installedMaps;
 
-            _gameDirectoryService.UsermapsChanged += GameDirectoryService_UsermapsChanged;
+            //_gameDirectoryService.UsermapsChanged += GameDirectoryService_UsermapsChanged;
             _gameDirectoryService.FastFileChanged += GameDirectoryService_FastFileChanged;
             _resourceSettings = resourceSettings;
 
@@ -52,18 +52,18 @@ namespace H2MLauncher.Core.Game
                 }
             }
 
-            // usermaps
-            foreach (var usermap in _gameDirectoryService.Usermaps)
-            {
-                _installedMaps.Add(usermap);
-            }
+            //// usermaps
+            //foreach (var usermap in _gameDirectoryService.Usermaps)
+            //{
+            //    _installedMaps.Add(usermap);
+            //}
 
             MapsChanged?.Invoke(this);
         }
 
         public void Dispose()
         {
-            _gameDirectoryService.UsermapsChanged -= GameDirectoryService_UsermapsChanged;
+            //_gameDirectoryService.UsermapsChanged -= GameDirectoryService_UsermapsChanged;
             _gameDirectoryService.FastFileChanged -= GameDirectoryService_FastFileChanged;
         }
     }

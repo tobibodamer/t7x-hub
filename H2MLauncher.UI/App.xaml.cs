@@ -175,7 +175,7 @@ namespace H2MLauncher.UI
             services.AddSingleton<IGameDetectionService, T7XGameDetectionService>();
             services.AddSingleton<IGameCommunicationService, T7XGameMemoryCommunicationService>();
             services.AddSingleton<GameDirectoryService>();
-            services.AddSingleton<IPlayerNameProvider, ConfigPlayerNameProvider>();
+            services.AddSingleton<IPlayerNameProvider, FilePlayerNameProvider>();
             services.AddSingleton<IGameConfigProvider, GameDirectoryService>(sp => sp.GetRequiredService<GameDirectoryService>());
             services.AddSingleton<IMapsProvider, InstalledMapsProvider>();
             services.AddSingleton<FpsLimiter>();
