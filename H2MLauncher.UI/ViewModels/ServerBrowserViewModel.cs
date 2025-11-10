@@ -111,6 +111,8 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         _h2MLauncherOptions.CurrentValue.ServerQueueing;
 
     private ServerTabViewModel<ServerViewModel> AllServersTab { get; set; }
+    private ServerTabViewModel<ServerViewModel> MultiplayerTab { get; set; }
+    private ServerTabViewModel<ServerViewModel> ZombiesTab { get; set; }
     private ServerTabViewModel<ServerViewModel> FavouritesTab { get; set; }
     private ServerTabViewModel<ServerViewModel> RecentsTab { get; set; }
     public ObservableCollection<IServerTabViewModel> ServerTabs { get; set; } = [];
@@ -195,7 +197,12 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             throw new Exception("Could not add all servers tab");
         }
 
-        if (!TryAddNewTab("HMW Servers", out ServerTabViewModel? hmwServersTab))
+        if (!TryAddNewTab("Multiplayer", out ServerTabViewModel? mpServersTab))
+        {
+            throw new Exception("Could not add HMW servers tab");
+        }
+
+        if (!TryAddNewTab("Zombies", out ServerTabViewModel? zmServersTab))
         {
             throw new Exception("Could not add HMW servers tab");
         }
@@ -217,6 +224,8 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
         //ServerTabs.Remove(allServersTab);
         AllServersTab = allServersTab;
+        MultiplayerTab = mpServersTab;
+        ZombiesTab = zmServersTab;
         FavouritesTab = favouritesTab;
 
         SelectedTab = allServersTab;
@@ -772,6 +781,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         List<SimpleServerInfo> userFavorites = GetFavoritesFromSettings();
         List<RecentServerInfo> userRecents = GetRecentsFromSettings();
 
+        bool isZombies = serverInfo.GameType.Equals("zclassic");
         bool isFavorite = userFavorites.Any(fav => fav.ServerIp == server.Ip && fav.ServerPort == server.Port);
         RecentServerInfo? recentInfo = userRecents.FirstOrDefault(recent => recent.ServerIp == server.Ip && recent.ServerPort == server.Port);
 
@@ -800,6 +810,15 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         // Game server responded -> online
         AllServersTab.Servers.Add(serverViewModel);
 
+        if (isZombies)
+        {
+            ZombiesTab.Servers.Add(serverViewModel);
+        }
+        else
+        {
+            MultiplayerTab.Servers.Add(serverViewModel);
+        }
+
         if (isFavorite)
         {
             FavouritesTab.Servers.Add(serverViewModel);
@@ -810,11 +829,6 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             serverViewModel.Joined = recentInfo.Joined;
             RecentsTab.Servers.Add(serverViewModel);
         }
-
-        //if (serverViewModel.Protocol == 3) // == HMW
-        //{
-        //    HMWServersTab.Servers.Add(serverViewModel);
-        //}
     }
 
     private async Task JoinServer(ServerViewModel? serverViewModel)
