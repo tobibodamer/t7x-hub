@@ -10,17 +10,17 @@ using Microsoft.Extensions.Logging;
 
 namespace H2MLauncher.Core.Game.Memory
 {
-    public sealed class H2MGameMemoryCommunicationService : IDisposable, IGameCommunicationService
+    public sealed class T7XGameMemoryCommunicationService : IDisposable, IGameCommunicationService
     {
         private const int GAME_MEMORY_READ_INTERVAL = 200;
 
-        private readonly ILogger<H2MGameMemoryCommunicationService> _logger;
+        private readonly ILogger<T7XGameMemoryCommunicationService> _logger;
 
         private readonly SemaphoreSlim _memorySemaphore = new(1, 1);
         private CancellationTokenSource _gameCommunicationCancellation = new();
         private Task? _gameCommunicationTask;
         private bool _isCommunicationRunning;
-        private H1GameMemory? _gameMemory;
+        private T7GameMemory? _gameMemory;
 
         private GameState _currentGameState = new(false, default, null, null);
         public GameState CurrentGameState
@@ -47,7 +47,7 @@ namespace H2MLauncher.Core.Game.Memory
         public event Action<Process>? Started;
         public event Action<Exception?>? Stopped;
 
-        public H2MGameMemoryCommunicationService(ILogger<H2MGameMemoryCommunicationService> logger)
+        public T7XGameMemoryCommunicationService(ILogger<T7XGameMemoryCommunicationService> logger)
         {
             _logger = logger;
         }
@@ -71,7 +71,7 @@ namespace H2MLauncher.Core.Game.Memory
                 _logger.LogDebug("Starting game memory communication with {processName} ({pid})...",
                    process.ProcessName, process.Id);
 
-                _gameMemory = new H1GameMemory(process, Constants.GAME_EXECUTABLE_NAME);
+                _gameMemory = new T7GameMemory(process, Constants.GAME_EXECUTABLE_NAME);
                 _gameCommunicationCancellation = new CancellationTokenSource();
                 _gameCommunicationTask = Task.Run(
                     function: () => GameMemoryCommunicationLoop(_gameMemory, _gameCommunicationCancellation.Token),
@@ -145,11 +145,11 @@ namespace H2MLauncher.Core.Game.Memory
             }
         }
 
-        private async Task GameMemoryCommunicationLoop(H1GameMemory gameMemory, CancellationToken cancellationToken)
+        private async Task GameMemoryCommunicationLoop(T7GameMemory gameMemory, CancellationToken cancellationToken)
         {
             while (!gameMemory.Process.HasExited && !cancellationToken.IsCancellationRequested)
             {
-                ConnectState? connectState;
+                NetAddress? connectedServerAddress;
                 IPEndPoint? endPoint;
                 bool virtualLobbyLoaded;
                 ConnectionState connectionState;
@@ -163,13 +163,13 @@ namespace H2MLauncher.Core.Game.Memory
 
                     connectionState = gameMemory.GetConnectionState() ?? ConnectionState.CA_DISCONNECTED;
 
-                    connectState = gameMemory.GetConnectState();
-                    if (connectState.HasValue)
+                    connectedServerAddress = gameMemory.GetConnectedServer();
+                    if (connectedServerAddress.HasValue)
                     {
                         try
                         {
-                            IPAddress ipAddress = new(connectState.Value.Address.IP);
-                            int port = connectState.Value.Address.Port;
+                            IPAddress ipAddress = new(connectedServerAddress.Value.IP);
+                            int port = connectedServerAddress.Value.Port;
                             endPoint = new IPEndPoint(ipAddress, port);
                             _logger.LogTrace("Game connection state: {connectionState} - {endpoint}", connectionState, endPoint);
                         }
@@ -184,7 +184,7 @@ namespace H2MLauncher.Core.Game.Memory
                         endPoint = null;
                     }
 
-                    virtualLobbyLoaded = gameMemory.GetVirtualLobbyLoaded() ?? false;
+                    virtualLobbyLoaded = false; //gameMemory.GetVirtualLobbyLoaded() ?? false;
                 }
                 finally
                 {
@@ -222,7 +222,7 @@ namespace H2MLauncher.Core.Game.Memory
             await _memorySemaphore.WaitAsync();
             try
             {
-                return _gameMemory.GetInGameMaps().ToDictionary(_ => _.id, _ => _.name).AsReadOnly();
+                return new Dictionary<int, string>();
             }
             finally
             {

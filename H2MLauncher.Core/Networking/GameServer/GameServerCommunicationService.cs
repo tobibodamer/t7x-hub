@@ -176,7 +176,12 @@ namespace H2MLauncher.Core.Services
 
             public CommandMessage CreateMessage()
             {
-                return new CommandMessage(CommandName);
+                byte[] challengeBuffer = new byte[8];
+                Random.Shared.NextBytes(challengeBuffer);
+
+                string challenge = Convert.ToHexString(challengeBuffer);
+
+                return new CommandMessage(CommandName, challenge);
             }
 
             public GameServerInfo? ParseResponse(Response response)

@@ -89,7 +89,7 @@ namespace H2MLauncher.Core.Services
 
         private static string? GetGameDir(H2MLauncherSettings settings)
         {
-            string? gameDir = Path.GetDirectoryName(settings.MWRLocation);
+            string? gameDir = Path.GetDirectoryName(settings.GameLocation);
             if (gameDir is null)
             {
                 return null;

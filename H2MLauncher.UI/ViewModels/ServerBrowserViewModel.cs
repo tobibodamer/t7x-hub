@@ -40,7 +40,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 {
     private readonly IMasterServerService _masterServerService;
     private readonly IGameServerInfoService<IServerConnectionDetails> _tcpGameServerCommunicationService;
-    private readonly H2MCommunicationService _h2MCommunicationService;
+    private readonly T7XCommunicationService _h2MCommunicationService;
     private readonly LauncherService _h2MLauncherService;
     private readonly IClipBoardService _clipBoardService;
     private readonly ISaveFileService _saveFileService;
@@ -111,7 +111,6 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         _h2MLauncherOptions.CurrentValue.ServerQueueing;
 
     private ServerTabViewModel<ServerViewModel> AllServersTab { get; set; }
-    private ServerTabViewModel<ServerViewModel> HMWServersTab { get; set; }
     private ServerTabViewModel<ServerViewModel> FavouritesTab { get; set; }
     private ServerTabViewModel<ServerViewModel> RecentsTab { get; set; }
     public ObservableCollection<IServerTabViewModel> ServerTabs { get; set; } = [];
@@ -134,9 +133,9 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
     public IAsyncRelayCommand EnterMatchmakingCommand { get; }
 
     public ServerBrowserViewModel(
-        IMasterServerService masterServerService,
-        [FromKeyedServices("TCP")] IGameServerInfoService<IServerConnectionDetails> tcpGameServerService,
-        H2MCommunicationService h2MCommunicationService,
+        [FromKeyedServices("T7X")] IMasterServerService masterServerService,
+        [FromKeyedServices("UDP")] IGameServerInfoService<IServerConnectionDetails> tcpGameServerService,
+        T7XCommunicationService h2MCommunicationService,
         LauncherService h2MLauncherService,
         IClipBoardService clipBoardService,
         ILogger<ServerBrowserViewModel> logger,
@@ -216,12 +215,11 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             throw new Exception("Could not add recents tab");
         }
 
-        ServerTabs.Remove(allServersTab);
+        //ServerTabs.Remove(allServersTab);
         AllServersTab = allServersTab;
-        HMWServersTab = hmwServersTab;
         FavouritesTab = favouritesTab;
 
-        SelectedTab = HMWServersTab;
+        SelectedTab = allServersTab;
 
         H2MLauncherSettings oldSettings = _h2MLauncherOptions.CurrentValue;
         _h2MLauncherOptions.OnChange((newSettings, _) =>
@@ -649,9 +647,9 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
             string directoryPath = "players2";
 
-            if (!string.IsNullOrEmpty(_h2MLauncherOptions.CurrentValue.MWRLocation))
+            if (!string.IsNullOrEmpty(_h2MLauncherOptions.CurrentValue.GameLocation))
             {
-                string? gameDirectory = Path.GetDirectoryName(_h2MLauncherOptions.CurrentValue.MWRLocation);
+                string? gameDirectory = Path.GetDirectoryName(_h2MLauncherOptions.CurrentValue.GameLocation);
 
                 directoryPath = Path.Combine(gameDirectory ?? "", directoryPath);
             }
@@ -742,7 +740,6 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             StatusText = "Refreshing servers...";
 
             AllServersTab.Servers.Clear();
-            HMWServersTab.Servers.Clear();
             FavouritesTab.Servers.Clear();
             RecentsTab.Servers.Clear();
 
@@ -814,10 +811,10 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             RecentsTab.Servers.Add(serverViewModel);
         }
 
-        if (serverViewModel.Protocol == 3) // == HMW
-        {
-            HMWServersTab.Servers.Add(serverViewModel);
-        }
+        //if (serverViewModel.Protocol == 3) // == HMW
+        //{
+        //    HMWServersTab.Servers.Add(serverViewModel);
+        //}
     }
 
     private async Task JoinServer(ServerViewModel? serverViewModel)
@@ -853,7 +850,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
         if (dialogResult == true)
         {
-            _h2MCommunicationService.LaunchH2MMod();
+            _h2MCommunicationService.Launch();
         }
 
         return false;
@@ -891,21 +888,21 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
     public void Receive(SelectServerMessage message)
     {
-        if (SelectedTab != HMWServersTab)
+        if (SelectedTab != AllServersTab)
         {
-            SelectedTab = HMWServersTab;
+            SelectedTab = AllServersTab;
         }
 
         ServerViewModel? serverViewModel = FindServerViewModel(message.Value);
         if (serverViewModel is not null && SelectedTab.Servers.Contains(serverViewModel))
         {
-            HMWServersTab.SelectedServer = serverViewModel;
+            AllServersTab.SelectedServer = serverViewModel;
         }
     }
 
     private void LaunchH2M()
     {
-        _h2MCommunicationService.LaunchH2MMod();
+        _h2MCommunicationService.Launch();
     }
 
     public void Dispose()

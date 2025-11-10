@@ -16,12 +16,12 @@ namespace H2MLauncher.UI.Services;
 public class ServerJoinService : ServerJoinServiceBase
 {
     private readonly DialogService _dialogService;
-    private readonly H2MCommunicationService _communicationService;
+    private readonly T7XCommunicationService _communicationService;
 
     public ServerJoinService(
         DialogService dialogService,
         IOptionsMonitor<H2MLauncherSettings> options,
-        H2MCommunicationService h2mCommunicationService,
+        T7XCommunicationService h2mCommunicationService,
         QueueingService queueingService,
         IMapsProvider mapsProvider,
         IGameServerInfoService<IServerConnectionDetails> gameServerInfoService)
@@ -97,7 +97,7 @@ public class ServerJoinService : ServerJoinServiceBase
 
         if (dialogResult == true)
         {
-            _communicationService.LaunchH2MMod();
+            _communicationService.Launch();
         }
 
         return ValueTask.FromResult(false);

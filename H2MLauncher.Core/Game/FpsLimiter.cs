@@ -21,7 +21,7 @@ public sealed class FpsLimiter : IDisposable
 {
     private readonly CompositeDisposable _disposables = [];
 
-    private readonly H2MCommunicationService _communicationService;
+    private readonly T7XCommunicationService _communicationService;
     private readonly IWritableOptions<H2MLauncherSettings> _options;
     private readonly ILogger<FpsLimiter> _logger;
 
@@ -81,7 +81,7 @@ public sealed class FpsLimiter : IDisposable
 
     public FpsLimiter(
         GameDirectoryService gameDirectoryService,
-        H2MCommunicationService communicationService,
+        T7XCommunicationService communicationService,
         IWritableOptions<H2MLauncherSettings> options,
         ILogger<FpsLimiter> logger)
     {

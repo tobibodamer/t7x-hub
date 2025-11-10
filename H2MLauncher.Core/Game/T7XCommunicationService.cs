@@ -2,6 +2,7 @@
 using System.Data;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 using H2MLauncher.Core.Game.Models;
@@ -15,13 +16,13 @@ using Nogic.WritableOptions;
 
 namespace H2MLauncher.Core.Game
 {
-    public sealed class H2MCommunicationService : IDisposable
+    public sealed class T7XCommunicationService : IDisposable
     {
         // Mod executable file names (to automatically find game file in directory)
-        private static readonly string[] GAME_EXECUTABLE_NAMES = ["hmw-mod.exe", "h2m-mod.exe", "h2m-revived.exe"];
+        private static readonly string[] GAME_EXECUTABLE_NAMES = ["t7x.exe"];
 
         // Strings to match game / mod window titles
-        private static readonly string[] H2M_WINDOW_TITLE_STRINGS = ["h2m-mod", "HorizonMW"];
+        private static readonly string[] T7X_WINDOW_TITLE_STRINGS = ["T7x"];
 
         //Windows API constants
         private const int WM_CHAR = 0x0102; // Message code for sending a character
@@ -30,14 +31,14 @@ namespace H2MLauncher.Core.Game
 
         private readonly IWritableOptions<H2MLauncherSettings> _h2mLauncherSettings;
         private readonly IErrorHandlingService _errorHandlingService;
-        private readonly ILogger<H2MCommunicationService> _logger;
+        private readonly ILogger<T7XCommunicationService> _logger;
         private readonly IDisposable? _optionsChangeRegistration;
 
         public IGameCommunicationService GameCommunication { get; }
         public IGameDetectionService GameDetection { get; }
 
-        public H2MCommunicationService(IErrorHandlingService errorHandlingService, IWritableOptions<H2MLauncherSettings> options,
-            ILogger<H2MCommunicationService> logger, IGameCommunicationService gameCommunicationService, IGameDetectionService gameDetectionService)
+        public T7XCommunicationService(IErrorHandlingService errorHandlingService, IWritableOptions<H2MLauncherSettings> options,
+            ILogger<T7XCommunicationService> logger, IGameCommunicationService gameCommunicationService, IGameDetectionService gameDetectionService)
         {
             _errorHandlingService = errorHandlingService;
             _h2mLauncherSettings = options;
@@ -149,20 +150,26 @@ namespace H2MLauncher.Core.Game
 
         private delegate bool EnumWindowsProc(nint hWnd, nint lParam);
 
-        private static IEnumerable<nint> EnumerateProcessWindowHandles(int processId)
+        private static IEnumerable<(nint, string)> EnumerateProcessWindowHandles(int processId)
         {
-            var handles = new List<nint>();
-
-            foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
-                EnumThreadWindows(thread.Id,
-                    (hWnd, lParam) => { handles.Add(hWnd); return true; }, nint.Zero);
-
-            return handles;
+            var result = new List<(nint, string)>();
+            EnumWindows((hWnd, lParam) =>
+            {
+                GetWindowThreadProcessId(hWnd, out uint windowPid);
+                if (windowPid == processId)
+                {
+                    var sb = new StringBuilder(256);
+                    GetWindowText(hWnd, sb, sb.Capacity);
+                    result.Add((hWnd, sb.ToString()));
+                }
+                return true;
+            }, IntPtr.Zero);
+            return result;
         }
 
         private bool TryFindValidGameFile(out string fileName)
         {
-            if (string.IsNullOrEmpty(_h2mLauncherSettings.CurrentValue.MWRLocation))
+            if (string.IsNullOrEmpty(_h2mLauncherSettings.CurrentValue.GameLocation))
             {
                 foreach (string exeFileName in GAME_EXECUTABLE_NAMES)
                 {
@@ -175,7 +182,7 @@ namespace H2MLauncher.Core.Game
                 }
             }
 
-            string userDefinedLocation = Path.GetFullPath(_h2mLauncherSettings.CurrentValue.MWRLocation);
+            string userDefinedLocation = Path.GetFullPath(_h2mLauncherSettings.CurrentValue.GameLocation);
 
             if (!Path.Exists(userDefinedLocation))
             {
@@ -202,7 +209,7 @@ namespace H2MLauncher.Core.Game
             return File.Exists(userDefinedLocation);
         }
 
-        public void LaunchH2MMod()
+        public void Launch()
         {
             ReleaseCapture();
 
@@ -221,7 +228,7 @@ namespace H2MLauncher.Core.Game
                 {
                     ProcessStartInfo startInfo = new(gameFileName)
                     {
-                        WorkingDirectory = Path.GetDirectoryName(gameFileName)
+                        WorkingDirectory = Path.GetDirectoryName(gameFileName),
                     };
 
                     Process.Start(startInfo);
@@ -257,35 +264,79 @@ namespace H2MLauncher.Core.Game
             return ExecuteCommandAsync(["disconnect"]);
         }
 
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(nint hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
         public async Task<bool> ExecuteCommandAsync(string[] commands, bool bringGameWindowToForeground = true)
         {
-            Process? h2mModProcess = FindH2MModProcess();
-            if (h2mModProcess == null)
+            Process? process = FindProcess();
+            if (process == null)
             {
                 _errorHandlingService.HandleError("Could not find the h2m-mod terminal window.");
                 return false;
             }
 
-            nint conHostHandle = GetConsoleHandle(h2mModProcess, freeConsole: false);
+            nint conHostHandle = GetConsoleHandle(process, freeConsole: false);
+
             try
             {
-                ReleaseCapture();
-
-                foreach (string command in commands)
+                if (conHostHandle == IntPtr.Zero)
                 {
-                    if (!WriteToConsoleInput(command + "\r"))
+
+                    // Grab the handle of the console window
+                    nint hWindow = FindT7XConsoleWindow(process);
+                    //nint hWindow = FindT7XModGameWindow(process);
+
+                    SetForegroundWindow(hWindow);
+                    ReleaseCapture();
+
+
+                    await Task.Delay(1000);
+
+                    // Open In Game Console
+                    //SendMessage(hWindow, WM_CHAR, 192, nint.Zero);
+
+                    foreach (string command in commands)
                     {
-                        _logger.LogWarning("Could not write command {command} to console input", command);
+                        //SendInputHelper.SendString(command);
+                        //SendInputHelper.PressEnter();
+                        foreach (char c in command)
+                        {
+                            SendMessage(hWindow, WM_CHAR, c, nint.Zero);
+                            await Task.Delay(1);
+                        }
+
+                        // Sleep for 1ms to allow the command to be processed
+                        await Task.Delay(1);
+
+                        // Simulate pressing the Enter key
+                        SendMessage(hWindow, WM_KEYDOWN, 13, nint.Zero);
+                        SendMessage(hWindow, WM_KEYUP, 13, nint.Zero);
                     }
 
-                    // Sleep for 1ms to allow the command to be processed
-                    await Task.Delay(1);
+                    await Task.Delay(1000);
+                }
+                else
+                {
+
+                    ReleaseCapture();
+
+                    foreach (string command in commands)
+                    {
+                        if (!WriteToConsoleInput(command + "\r"))
+                        {
+                            _logger.LogWarning("Could not write command {command} to console input", command);
+                        }
+
+                        // Sleep for 1ms to allow the command to be processed
+                        await Task.Delay(1);
+                    }
                 }
 
                 if (bringGameWindowToForeground)
                 {
                     // Set H2M to foreground window
-                    var hGameWindow = FindH2MModGameWindow(h2mModProcess);
+                    var hGameWindow = FindT7XModGameWindow(process);
                     SetForegroundWindow(hGameWindow);
                 }
 
@@ -357,26 +408,20 @@ namespace H2MLauncher.Core.Game
                 return nint.Zero;
             }
 
-            return FindH2MModGameWindow(GameDetection.DetectedGame.Process);
+            return FindT7XModGameWindow(GameDetection.DetectedGame.Process);
         }
 
-        public static Process? FindH2MModProcess()
+        public static Process? FindProcess()
         {
             // find processes with matching title
             var processesWithTitle = Process.GetProcesses().Where(p =>
-                H2M_WINDOW_TITLE_STRINGS.Any(str => p.MainWindowTitle.Contains(str, StringComparison.OrdinalIgnoreCase))).ToList();
+                T7X_WINDOW_TITLE_STRINGS.Any(str => p.MainWindowTitle.Contains(str, StringComparison.OrdinalIgnoreCase))).ToList();
 
-            // find process that loaded H1 MP binary
+            // find process that loaded BO3 binary
             var gameProc = processesWithTitle.FirstOrDefault(p =>
                 p.Modules.OfType<ProcessModule>().Any(m => m.ModuleName.Equals(Constants.GAME_EXECUTABLE_NAME)));
 
             return gameProc;
-        }
-
-        private static bool IsH2MModProcess(Process p)
-        {
-            return H2M_WINDOW_TITLE_STRINGS.Any(str => p.MainWindowTitle.Contains(str, StringComparison.OrdinalIgnoreCase)) &&
-                p.Modules.OfType<ProcessModule>().Any(m => m.ModuleName.Equals(Constants.GAME_EXECUTABLE_NAME));
         }
 
         private static nint GetConsoleHandle(Process process, bool freeConsole = true)
@@ -399,12 +444,41 @@ namespace H2MLauncher.Core.Game
             return nint.Zero;
         }
 
-        private static nint FindH2MModGameWindow(Process process)
+        private static string? GetWindowTitle(nint hWnd)
+        {
+            const int length = 256;
+            StringBuilder sb = new(length);
+
+            if (GetWindowText(hWnd, sb, length) > 0)
+            {
+                return sb.ToString();
+            }
+
+            return null;
+        }
+
+        private static nint FindT7XModGameWindow(Process process)
         {
             // find game window
-            foreach (nint hChild in EnumerateProcessWindowHandles(process.Id))
+            foreach ((nint hChild, string title) in EnumerateProcessWindowHandles(process.Id))
             {
-                if (GetConsoleHandle(process) != hChild)
+                if (title is not null && !title.Equals("T7x Console"))
+                {
+                    // if its not the console, its probably the game window
+                    return hChild;
+                }
+            }
+
+            // otherwise return just the main window, whatever it is
+            return process.MainWindowHandle;
+        }
+
+        private static nint FindT7XConsoleWindow(Process process)
+        {
+            // find game window
+            foreach ((nint hChild, string title) in EnumerateProcessWindowHandles(process.Id))
+            {
+                if (title is not null && title.Equals("T7x Console"))
                 {
                     // if its not the console, its probably the game window
                     return hChild;

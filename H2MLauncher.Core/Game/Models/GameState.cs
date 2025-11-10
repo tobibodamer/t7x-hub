@@ -43,7 +43,7 @@ namespace H2MLauncher.Core.Game.Models
         public bool IsConnecting => ConnectionState is 
             ConnectionState.CA_CONNECTING or 
             ConnectionState.CA_CHALLENGING or 
-            ConnectionState.CA_SENDINGSTATS;
+            ConnectionState.CA_CONFIRMLOADING;
 
         public bool IsInMainMenu => VirtualLobbyLoaded || ConnectionState < ConnectionState.CA_CONNECTING;
 

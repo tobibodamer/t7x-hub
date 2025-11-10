@@ -20,7 +20,7 @@ namespace H2MLauncher.Core.Joining;
 public abstract class ServerJoinServiceBase : IServerJoinService, IRecipient<JoinRequestMessage>
 {
     private readonly IOptionsMonitor<H2MLauncherSettings> _options;
-    private readonly H2MCommunicationService _h2mCommunicationService;
+    private readonly T7XCommunicationService _h2mCommunicationService;
     private readonly QueueingService _queueingService;
     private readonly IGameServerInfoService<IServerConnectionDetails> _gameServerInfoService;
     private readonly IMapsProvider _mapsProvider;
@@ -30,7 +30,7 @@ public abstract class ServerJoinServiceBase : IServerJoinService, IRecipient<Joi
 
     public ServerJoinServiceBase(
         IOptionsMonitor<H2MLauncherSettings> options,
-        H2MCommunicationService h2mCommunicationService,
+        T7XCommunicationService h2mCommunicationService,
         QueueingService queueingService,
         IMapsProvider mapsProvider,
         IGameServerInfoService<IServerConnectionDetails> gameServerInfoService)

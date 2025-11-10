@@ -21,7 +21,7 @@ namespace H2MLauncher.UI
     {
         private readonly ServerBrowserViewModel _viewModel;
         private readonly OverlayHelper _overlayHelper;
-        private readonly H2MCommunicationService _h2MCommunicationService;
+        private readonly T7XCommunicationService _h2MCommunicationService;
         private bool _isFirstRender = true;
 
         [ObservableProperty]
@@ -36,7 +36,7 @@ namespace H2MLauncher.UI
 
         public MainWindow(
             ServerBrowserViewModel serverBrowserViewModel,
-            H2MCommunicationService h2MCommunicationService,
+            T7XCommunicationService h2MCommunicationService,
             CustomizationManager customizationManager,
             DialogService dialogService)
         {
