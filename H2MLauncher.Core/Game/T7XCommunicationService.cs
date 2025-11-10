@@ -248,7 +248,7 @@ namespace H2MLauncher.Core.Game
 
         public Task<bool> JoinServer(string ip, string port, string? password = null)
         {
-            const string disconnectCommand = "disconnect";
+            //const string disconnectCommand = "disconnect";
             string connectCommand = $"connect {ip}:{port}";
 
             if (password is not null)
@@ -256,7 +256,7 @@ namespace H2MLauncher.Core.Game
                 connectCommand += $";password {password}";
             }
 
-            return ExecuteCommandAsync([disconnectCommand, connectCommand]);
+            return ExecuteCommandAsync([connectCommand]);
         }
 
         public Task<bool> Disconnect()
@@ -264,8 +264,51 @@ namespace H2MLauncher.Core.Game
             return ExecuteCommandAsync(["disconnect"]);
         }
 
-        [DllImport("user32.dll")]
-        static extern bool PostMessage(nint hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        static IntPtr MakeLParamForKey(
+            ushort repeatCount,
+            byte scanCode,
+            bool extended,
+            bool altDown,
+            bool previousKeyState,
+            bool transitionState)
+        {
+            // Build as unsigned 32-bit to avoid sign issues.
+            uint l = 0;
+
+            // Bits 0-15: repeat count
+            l |= (uint)(repeatCount & 0xFFFF);
+
+            // Bits 16-23: scan code
+            l |= (uint)(scanCode & 0xFFu) << 16;
+
+            // Bit 24: extended
+            if (extended) l |= 1u << 24;
+
+            // Bit 29: context (ALT)
+            if (altDown) l |= 1u << 29;
+
+            // Bit 30: previous key state
+            if (previousKeyState) l |= 1u << 30;
+
+            // Bit 31: transition state (0 = keydown, 1 = keyup)
+            if (transitionState) l |= 1u << 31;
+
+            return new IntPtr(unchecked((int)l));
+        }
+
+        static void SendTildeToWindow(nint hWnd)
+        {
+            // Typical scan code for OEM_3 on many keyboards is 0x29 (but layouts vary).
+            // For WM_KEYDOWN/WM_KEYUP lParam we include a scan code field; but many apps ignore lParam.
+            byte scan = 0x29; // common value, not guaranteed for all layouts
+            IntPtr lParamDown = MakeLParamForKey(1, scan, false, false, false, false);
+            IntPtr lParamUp = MakeLParamForKey(1, scan, false, false, true, true);
+
+            // Send WM_KEYDOWN then WM_KEYUP
+            SendMessage(hWnd, WM_KEYDOWN, 192, lParamDown);
+            SendMessage(hWnd, WM_KEYUP, 192, lParamUp);
+        }
 
         public async Task<bool> ExecuteCommandAsync(string[] commands, bool bringGameWindowToForeground = true)
         {
@@ -284,8 +327,8 @@ namespace H2MLauncher.Core.Game
                 {
 
                     // Grab the handle of the console window
-                    nint hWindow = FindT7XConsoleWindow(process);
-                    //nint hWindow = FindT7XModGameWindow(process);
+                    //nint hWindow = FindT7XConsoleWindow(process);
+                    nint hWindow = FindT7XModGameWindow(process);
 
                     SetForegroundWindow(hWindow);
                     ReleaseCapture();
@@ -294,7 +337,7 @@ namespace H2MLauncher.Core.Game
                     await Task.Delay(1000);
 
                     // Open In Game Console
-                    //SendMessage(hWindow, WM_CHAR, 192, nint.Zero);
+                    SendTildeToWindow(hWindow);
 
                     foreach (string command in commands)
                     {
@@ -303,16 +346,20 @@ namespace H2MLauncher.Core.Game
                         foreach (char c in command)
                         {
                             SendMessage(hWindow, WM_CHAR, c, nint.Zero);
-                            await Task.Delay(1);
+                            await Task.Delay(5);
                         }
 
                         // Sleep for 1ms to allow the command to be processed
-                        await Task.Delay(1);
+                        await Task.Delay(5);
 
                         // Simulate pressing the Enter key
                         SendMessage(hWindow, WM_KEYDOWN, 13, nint.Zero);
                         SendMessage(hWindow, WM_KEYUP, 13, nint.Zero);
+
+                        await Task.Delay(5);
                     }
+
+                    SendTildeToWindow(hWindow);
 
                     await Task.Delay(1000);
                 }
