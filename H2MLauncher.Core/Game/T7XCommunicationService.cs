@@ -310,6 +310,52 @@ namespace H2MLauncher.Core.Game
             SendMessage(hWnd, WM_KEYUP, 192, lParamUp);
         }
 
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr SetFocus(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindowEx(
+            IntPtr hwndParent,      // Handle of the parent window
+            IntPtr hwndChildAfter,  // Handle to a child window (to search *after*)
+            string? lpszClass,      // The Class Name
+            string? lpszWindow      // The Window Name (Caption)
+        );
+
+        private static bool ExecuteCommandsInFancyConsole(Process process, string[] commands)
+        {
+            // Grab the handle of the console window
+            nint hWindow = FindT7XWindow(process, console: true);
+            if (hWindow == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            // 2. Find the child "Edit" control (the textbox) inside Notepad
+            IntPtr editHandle = FindWindowEx(hWindow, IntPtr.Zero, "Edit", null);
+            if (editHandle == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            foreach (string command in commands)
+            {
+                foreach (char c in command)
+                {
+                    PostMessage(editHandle, WM_CHAR, c, nint.Zero);
+                }
+
+                // Simulate pressing the Enter key
+                PostMessage(editHandle, WM_KEYDOWN, 13, nint.Zero);
+                PostMessage(editHandle, WM_KEYUP, 13, nint.Zero);
+            }
+
+            return true;
+        }
+
         public async Task<bool> ExecuteCommandAsync(string[] commands, bool bringGameWindowToForeground = true)
         {
             Process? process = FindProcess();
@@ -319,55 +365,16 @@ namespace H2MLauncher.Core.Game
                 return false;
             }
 
-            nint conHostHandle = GetConsoleHandle(process, freeConsole: false);
+            nint consoleHandle = GetConsoleHandle(process, freeConsole: false);
 
             try
             {
-                if (conHostHandle == IntPtr.Zero)
-                {
-
-                    // Grab the handle of the console window
-                    //nint hWindow = FindT7XConsoleWindow(process);
-                    nint hWindow = FindT7XModGameWindow(process);
-
-                    SetForegroundWindow(hWindow);
-                    ReleaseCapture();
-
-
-                    await Task.Delay(1000);
-
-                    // Open In Game Console
-                    SendTildeToWindow(hWindow);
-
-                    foreach (string command in commands)
-                    {
-                        //SendInputHelper.SendString(command);
-                        //SendInputHelper.PressEnter();
-                        foreach (char c in command)
-                        {
-                            SendMessage(hWindow, WM_CHAR, c, nint.Zero);
-                            await Task.Delay(5);
-                        }
-
-                        // Sleep for 1ms to allow the command to be processed
-                        await Task.Delay(5);
-
-                        // Simulate pressing the Enter key
-                        SendMessage(hWindow, WM_KEYDOWN, 13, nint.Zero);
-                        SendMessage(hWindow, WM_KEYUP, 13, nint.Zero);
-
-                        await Task.Delay(5);
-                    }
-
-                    SendTildeToWindow(hWindow);
-
-                    await Task.Delay(1000);
+                if (consoleHandle == IntPtr.Zero)
+                {       
+                    ExecuteCommandsInFancyConsole(process, commands);
                 }
                 else
                 {
-
-                    ReleaseCapture();
-
                     foreach (string command in commands)
                     {
                         if (!WriteToConsoleInput(command + "\r"))
@@ -383,7 +390,7 @@ namespace H2MLauncher.Core.Game
                 if (bringGameWindowToForeground)
                 {
                     // Set H2M to foreground window
-                    var hGameWindow = FindT7XModGameWindow(process);
+                    var hGameWindow = FindT7XWindow(process);
                     SetForegroundWindow(hGameWindow);
                 }
 
@@ -391,7 +398,7 @@ namespace H2MLauncher.Core.Game
             }
             finally
             {
-                if (conHostHandle != nint.Zero)
+                if (consoleHandle != nint.Zero)
                 {
                     FreeConsole();
                 }
@@ -455,7 +462,7 @@ namespace H2MLauncher.Core.Game
                 return nint.Zero;
             }
 
-            return FindT7XModGameWindow(GameDetection.DetectedGame.Process);
+            return FindT7XWindow(GameDetection.DetectedGame.Process);
         }
 
         public static Process? FindProcess()
@@ -504,28 +511,12 @@ namespace H2MLauncher.Core.Game
             return null;
         }
 
-        private static nint FindT7XModGameWindow(Process process)
+        private static nint FindT7XWindow(Process process, bool console = false)
         {
-            // find game window
+            // find game window / console
             foreach ((nint hChild, string title) in EnumerateProcessWindowHandles(process.Id))
             {
-                if (title is not null && !title.Equals("T7x Console"))
-                {
-                    // if its not the console, its probably the game window
-                    return hChild;
-                }
-            }
-
-            // otherwise return just the main window, whatever it is
-            return process.MainWindowHandle;
-        }
-
-        private static nint FindT7XConsoleWindow(Process process)
-        {
-            // find game window
-            foreach ((nint hChild, string title) in EnumerateProcessWindowHandles(process.Id))
-            {
-                if (title is not null && title.Equals("T7x Console"))
+                if (title is not null && console == title.Equals("T7x Console"))
                 {
                     // if its not the console, its probably the game window
                     return hChild;

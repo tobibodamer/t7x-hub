@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 using H2MLauncher.Core.Utilities;
 
@@ -38,16 +37,6 @@ public class T7GameMemory : IDisposable
         ProcessMemory.CloseProcess(_processHandle);
     }
 
-    //public int GetSvServerId()
-    //{
-    //    if (ProcessMemory.ReadProcessMemoryInt(_processHandle, _moduleBaseAddress + SV_SERVERID_H1, out int sv_serverid))
-    //    {
-    //        return sv_serverid;
-    //    }
-
-    //    return 0;
-    //}
-
 
     public NetAddress? GetConnectedServer()
     {
@@ -68,7 +57,7 @@ public class T7GameMemory : IDisposable
         nint address = new(basePtr + (MULTIPLIER * LOCAL_CLIENT_NUM) + FINAL_OFFSET);
 
         // Read the netadr structure
-        if (ProcessMemory.ReadStructFromMemoryPtr(_processHandle, address, out NetAddress? netAddress))
+        if (ProcessMemory.ReadStructFromMemory(_processHandle, address, out NetAddress netAddress))
         {
             return netAddress;
         }
@@ -78,7 +67,7 @@ public class T7GameMemory : IDisposable
 
     public ConnectionState? GetConnectionState()
     {
-        nint connectionStateAddr = _moduleBaseAddress + ADDR_CLIENT_UI_ACTIVES + 16;
+        nint connectionStateAddr = _moduleBaseAddress + ADDR_CLIENT_UI_ACTIVES + 8;
         if (ProcessMemory.ReadProcessMemoryInt(_processHandle, connectionStateAddr, out int connectionState))
         {
             return (ConnectionState)connectionState;
@@ -87,50 +76,14 @@ public class T7GameMemory : IDisposable
         return null;
     }
 
-    //public bool? GetVirtualLobbyLoaded()
-    //{
-    //    if (ProcessMemory.ReadProcessMemoryBool(_processHandle, _moduleBaseAddress + VIRTUAL_LOBBY_LOADED_H1, out bool loaded))
-    //    {
-    //        return loaded;
-    //    }
+    public int GetUsermapsCount()
+    {
+        nint addr = _moduleBaseAddress + 0x167B3580;
+        if (ProcessMemory.ReadProcessMemoryUInt(_processHandle, addr, out uint count))
+        {
+            return (int)count;
+        }
 
-    //    return null;
-    //}
-
-    //public IEnumerable<(int id, string name)> GetInGameMaps()
-    //{
-    //    IntPtr mapsPointer = _moduleBaseAddress + MAPS_H1;
-
-    //    int structSize = Marshal.SizeOf<Map_t>();
-
-    //    // Iterate through the array
-    //    for (int i = 0; ; i++)
-    //    {
-    //        // Calculate the pointer to the current map_t struct in the array
-    //        IntPtr currentMapPointer = IntPtr.Add(mapsPointer, i * structSize);
-
-    //        if (!ProcessMemory.ReadStructFromMemory(_processHandle, currentMapPointer, out Map_t currentMap))
-    //        {
-    //            yield break;
-    //        }
-
-    //        // Check if the 'unk' field is zero (end of the array)
-    //        if (currentMap.Unk == 0)
-    //        {
-    //            break;
-    //        }
-
-    //        // Read 64 chars of the name
-    //        if (!ProcessMemory.ReadProcessMemoryString(_processHandle, currentMap.NameAddress, 64, out string? name))
-    //        {
-    //            continue;
-    //        }
-
-    //        // trim everything after and including first null char
-    //        int firstNullCharIndex = name.IndexOf('\0');
-    //        string mapName = firstNullCharIndex == -1 ? name : name[..firstNullCharIndex];
-
-    //        yield return (currentMap.Id, mapName);
-    //    }
-    //}
+        return 0;
+    }
 }

@@ -162,7 +162,6 @@ namespace H2MLauncher.Core.Game.Memory
                         gameMemory.Process.ProcessName, gameMemory.Process.Id);
 
                     connectionState = gameMemory.GetConnectionState() ?? ConnectionState.CA_DISCONNECTED;
-
                     connectedServerAddress = gameMemory.GetConnectedServer();
                     if (connectedServerAddress.HasValue)
                     {

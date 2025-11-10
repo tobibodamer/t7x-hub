@@ -36,7 +36,7 @@ namespace H2MLauncher.Core.Game
         public static void SendKey(char c)
         {
             ushort scanCode = (ushort)c;
-
+            
             INPUT down = new INPUT();
             down.type = INPUT_KEYBOARD;
             down.u.ki.wVk = 0;

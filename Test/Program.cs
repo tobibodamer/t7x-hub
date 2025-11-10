@@ -148,23 +148,23 @@ namespace GameMemoryReader
                         }
                     }
 
-                    //// Read dvar count
-                    //if (dvarCountAddr != 0)
-                    //{
-                    //    int dvarCount = ReadInt32(dvarCountFinal);
-                    //    Console.WriteLine($"\nDvar Count: {dvarCount}");
+                    // Read dvar count
+                    if (dvarCountAddr != 0)
+                    {
+                        int dvarCount = ReadInt32(dvarCountFinal);
+                        Console.WriteLine($"\nDvar Count: {dvarCount}");
 
-                    //    // Read dvars from pool (it's a hash table with linked lists)
-                    //    if (dvarCount > 0 && dvarCount < 10000) // Sanity check
-                    //    {
-                    //        Console.WriteLine("\nDvar Pool (first 20 found):");
-                    //        ReadDvarPoolHashTable(dvarPoolFinal, dvarCount, 20);
-                    //    }
-                    //    else
-                    //    {
-                    //        Console.WriteLine("Dvar count seems invalid (too high or zero)");
-                    //    }
-                    //}
+                        // Read dvars from pool (it's a hash table with linked lists)
+                        if (dvarCount > 0 && dvarCount < 10000) // Sanity check
+                        {
+                            Console.WriteLine("\nDvar Pool (first 20 found):");
+                            ReadDvarPoolHashTable(dvarPoolFinal, dvarCount, dvarCount);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Dvar count seems invalid (too high or zero)");
+                        }
+                    }
 
                     Thread.Sleep(1000);
                 }
@@ -209,60 +209,72 @@ namespace GameMemoryReader
 
         static void ReadDvarPoolHashTable(long poolAddress, int totalCount, int maxToDisplay)
         {
-            // The dvar pool is a hash table - we need to find out the bucket count
-            // Common hash table sizes are powers of 2 (256, 512, 1024, etc.)
-            // Let's try to guess the bucket count or iterate through possible buckets
-
-            int bucketsToCheck = Math.Min(512, totalCount); // Check first 512 buckets
-            int found = 0;
-            HashSet<long> visitedAddresses = new HashSet<long>();
-
-            for (int bucket = 0; bucket < bucketsToCheck && found < maxToDisplay; bucket++)
+            for (int i = 0; i < totalCount; i++)
             {
-                try
+                long dvarPtr = poolAddress + 160 * i;
+                Dvar dvar = ReadDvar(dvarPtr);
+
+                if (!string.IsNullOrEmpty(dvar.debugName) && dvar.debugName != "(null)")
                 {
-                    // Each bucket is a pointer (8 bytes)
-                    long bucketAddr = poolAddress + (bucket * 8);
-                    long dvarPtr = ReadInt64(bucketAddr);
-
-                    if (dvarPtr == 0 || dvarPtr < 0x10000) continue;
-                    if (visitedAddresses.Contains(dvarPtr)) continue;
-
-                    // Traverse the linked list in this bucket
-                    while (dvarPtr != 0 && found < maxToDisplay)
-                    {
-                        if (visitedAddresses.Contains(dvarPtr)) break;
-                        visitedAddresses.Add(dvarPtr);
-
-                        try
-                        {
-                            Dvar dvar = ReadDvar(dvarPtr);
-
-                            if (!string.IsNullOrEmpty(dvar.debugName) && dvar.debugName != "(null)")
-                            {
-                                Console.WriteLine($"  [{found}] {dvar.debugName} = {GetDvarValueString(dvar)} (type: {dvar.type})");
-                                found++;
-                            }
-
-                            // Get next dvar in linked list (hashNext pointer)
-                            dvarPtr = dvar.hashNextPtr;
-                        }
-                        catch
-                        {
-                            break;
-                        }
-                    }
-                }
-                catch
-                {
-                    // Skip invalid buckets
+                    Console.WriteLine($"{dvar.debugName} = {GetDvarValueString(dvar)} (type: {dvar.type})");
                 }
             }
 
-            if (found == 0)
-            {
-                Console.WriteLine("  No valid dvars found. The hash table structure might be different.");
-            }
+
+            //// The dvar pool is a hash table - we need to find out the bucket count
+            //// Common hash table sizes are powers of 2 (256, 512, 1024, etc.)
+            //// Let's try to guess the bucket count or iterate through possible buckets
+
+            //int bucketsToCheck = Math.Min(512, totalCount); // Check first 512 buckets
+            //int found = 0;
+            //HashSet<long> visitedAddresses = new HashSet<long>();
+
+            //for (int bucket = 0; bucket < bucketsToCheck && found < maxToDisplay; bucket++)
+            //{
+            //    try
+            //    {
+            //        // Each bucket is a pointer (8 bytes)
+            //        long bucketAddr = poolAddress + (bucket * 8);
+            //        long dvarPtr = ReadInt64(bucketAddr);
+
+            //        if (dvarPtr == 0 || dvarPtr < 0x10000) continue;
+            //        if (visitedAddresses.Contains(dvarPtr)) continue;
+
+            //        // Traverse the linked list in this bucket
+            //        while (dvarPtr != 0 && found < maxToDisplay)
+            //        {
+            //            if (visitedAddresses.Contains(dvarPtr)) break;
+            //            visitedAddresses.Add(dvarPtr);
+
+            //            try
+            //            {
+            //                Dvar dvar = ReadDvar(dvarPtr);
+
+            //                if (!string.IsNullOrEmpty(dvar.debugName) && dvar.debugName != "(null)")
+            //                {
+            //                    Console.WriteLine($"  [{found}] {dvar.debugName} = {GetDvarValueString(dvar)} (type: {dvar.type})");
+            //                    found++;
+            //                }
+
+            //                // Get next dvar in linked list (hashNext pointer)
+            //                dvarPtr = dvar.hashNextPtr;
+            //            }
+            //            catch
+            //            {
+            //                break;
+            //            }
+            //        }
+            //    }
+            //    catch
+            //    {
+            //        // Skip invalid buckets
+            //    }
+            //}
+
+            //if (found == 0)
+            //{
+            //    Console.WriteLine("  No valid dvars found. The hash table structure might be different.");
+            //}
         }
 
         static void ReadDvarPool(long poolAddress, int count)

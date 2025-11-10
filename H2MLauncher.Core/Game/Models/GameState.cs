@@ -45,7 +45,11 @@ namespace H2MLauncher.Core.Game.Models
             ConnectionState.CA_CHALLENGING or 
             ConnectionState.CA_CONFIRMLOADING;
 
-        public bool IsInMainMenu => VirtualLobbyLoaded || ConnectionState < ConnectionState.CA_CONNECTING;
+        public bool IsInMainMenu => VirtualLobbyLoaded ||
+            (ConnectionState is ConnectionState.CA_ACTIVE && 
+            Endpoint is not null && 
+            Endpoint.Address.Equals(IPAddress.Loopback) && 
+            Endpoint.Port == 4);
 
         public bool IsPrivateMatch => Endpoint?.Address.Equals(IPAddress.Any) == true && !IsInMainMenu;
 

@@ -190,10 +190,11 @@ public sealed class FpsLimiter : IDisposable
                 .DistinctUntilChanged()
                 .TakeUntil(stopLimiterO)
                 .Finally(() => _logger.LogInformation("FPS limiter stopped."))
-                .SelectMany(values => Observable.FromAsync(() =>
+                .Select(values => Observable.FromAsync((ct) =>
                 {
-                    return ApplyFpsLimit(values.maxFps, values.isLimited);
+                    return ApplyFpsLimit(values.maxFps, values.isLimited, ct);
                 }))
+                .Switch()
                 .Subscribe(
                     _ => { },
                     ex => // OnError for the whole chain if something unexpected happens
@@ -245,7 +246,7 @@ public sealed class FpsLimiter : IDisposable
         return (maxFps, isLimited);
     }
 
-    private async Task ApplyFpsLimit(int maxFps, bool isLimited)
+    private async Task ApplyFpsLimit(int maxFps, bool isLimited, CancellationToken ct)
     {
         try
         {
@@ -254,6 +255,11 @@ public sealed class FpsLimiter : IDisposable
                 _logger.LogInformation("Skipping applying FPS limit because it is unset.");
                 return;
             }
+
+            //if (isLimited)
+            //{
+            //    await Task.Delay(5000, ct);
+            //}
 
             _logger.LogDebug("Changing max FPS to {maxFps} (limited: {limited}).", maxFps, isLimited);
 
@@ -270,6 +276,7 @@ public sealed class FpsLimiter : IDisposable
                 _limiterStatusSubject.OnNext(FpsLimiterStatus.Failed);
             }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while changing max FPS.");
