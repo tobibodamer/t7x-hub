@@ -1,10 +1,8 @@
-﻿using System.Text.Json;
-
-using H2MLauncher.Core.Services;
+﻿using H2MLauncher.Core.Services;
 
 namespace H2MLauncher.Core.Game
 {
-    public sealed class FilePlayerNameProvider : IPlayerNameProvider
+    public sealed class PropertiesPlayerNameProvider : IPlayerNameProvider
     {
         private readonly GameDirectoryService _gameDirectoryService;
 
@@ -12,15 +10,15 @@ namespace H2MLauncher.Core.Game
 
         public event Action<string, string>? PlayerNameChanged;
 
-        public FilePlayerNameProvider(GameDirectoryService gameDirectoryService)
+        public PropertiesPlayerNameProvider(GameDirectoryService gameDirectoryService)
         {
             _gameDirectoryService = gameDirectoryService;
-            _gameDirectoryService.UserPropertiesChanged += GameDirectoryService_UserPropertiesChanged;
+            _gameDirectoryService.PlayerPropertiesChanged += GameDirectoryService_PlayerPropertiesChanged;
 
-            PlayerName = GetPlayerName(gameDirectoryService.CurrentUserProperties);
+            PlayerName = GetPlayerName(gameDirectoryService.CurrentPlayersProperties);
         }
 
-        private void GameDirectoryService_UserPropertiesChanged(string path, JsonDocument? newContent)
+        private void GameDirectoryService_PlayerPropertiesChanged(string path, GameDirectoryService.Properties? newContent)
         {
             if (newContent is null)
             {
@@ -38,9 +36,9 @@ namespace H2MLauncher.Core.Game
             PlayerNameChanged?.Invoke(oldPlayerName, PlayerName);
         }
 
-        private static string GetPlayerName(JsonDocument? properties)
+        private static string GetPlayerName(GameDirectoryService.Properties? properties)
         {
-            return properties?.RootElement.GetProperty("playerName").GetString() ?? "Unknown Soldier";
+            return properties?.PlayerName ?? "Unknown Soldier";
         }
     }
 }

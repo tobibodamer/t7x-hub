@@ -13,7 +13,15 @@ namespace H2MLauncher.Core.Services
 {
     public sealed partial class GameDirectoryService : IGameConfigProvider, IDisposable
     {
+        /// <summary>
+        /// Type of the config.ini file in the T7X players directory
+        /// </summary>
         public record ConfigIniContent(int MaxFps);
+
+        /// <summary>
+        /// Type of the properties.json file in the T7X players directory
+        /// </summary>
+        public record Properties(string? PlayerName);
 
         private const string T7X_PLAYERS_DIR = "t7x\\players";
         private const string PROPERTIES_FILENAME = "properties.json";
@@ -27,19 +35,19 @@ namespace H2MLauncher.Core.Services
         public string? CurrentDir { get; private set; }
         public bool IsWatching => _fileSystemWatcher != null;
         public ConfigIniContent? CurrentConfig { get; private set; }
-        public JsonDocument? CurrentUserProperties { get; private set; }
+        public Properties? CurrentPlayersProperties { get; private set; }
 
 
         public event ConfigChangedEventHandler? ConfigMpChanged;
 
-        public event PropertiesChangedEventHandler? UserPropertiesChanged;
+        public event PropertiesChangedEventHandler? PlayerPropertiesChanged;
 
 
         public event Action<string, string>? FastFileChanged;
 
         public delegate void ConfigChangedEventHandler(string filePath, ConfigIniContent? config);
 
-        public delegate void PropertiesChangedEventHandler(string filePath, JsonDocument? content);
+        public delegate void PropertiesChangedEventHandler(string filePath, Properties? content);
 
 
         public GameDirectoryService(IOptionsMonitor<H2MLauncherSettings> optionsMonitor, ILogger<GameDirectoryService> logger)
@@ -215,28 +223,28 @@ namespace H2MLauncher.Core.Services
         {
             if (!File.Exists(path))
             {
-                CurrentUserProperties = null;
-                UserPropertiesChanged?.Invoke(path, null);
+                CurrentPlayersProperties = null;
+                PlayerPropertiesChanged?.Invoke(path, null);
                 return;
             }
 
             _logger.LogTrace("Properties file change detected, parsing...");
 
-            JsonDocument content;
+            Properties? content;
 
             // open file with read write share
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                content = JsonDocument.Parse(fs);
+                content = JsonSerializer.Deserialize<Properties>(fs);
             }
 
             _logger.LogTrace("Parsed '{propertiesFiles}': {content}", PROPERTIES_FILENAME, content);
                         
-            if (!content.Equals(CurrentUserProperties))
+            if (!EqualityComparer<Properties>.Default.Equals(content, CurrentPlayersProperties))
             {
                 _logger.LogInformation("New '{propertiesFiles}' loaded: {content}", PROPERTIES_FILENAME, content);
-                CurrentUserProperties = content;
-                UserPropertiesChanged?.Invoke(path, CurrentUserProperties);
+                CurrentPlayersProperties = content;
+                PlayerPropertiesChanged?.Invoke(path, CurrentPlayersProperties);
             }
         }
 

@@ -79,6 +79,10 @@ namespace H2MLauncher.Core.Game
         private static extern nint SendMessage(nint hWnd, uint msg, nint wParam, nint lParam);
 
         [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
         public static extern bool ReleaseCapture();
 
         [DllImport("user32.dll")]
@@ -87,14 +91,20 @@ namespace H2MLauncher.Core.Game
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern bool EnumWindows(EnumWindowsProc enumProc, nint lParam);
 
-        [DllImport("user32.dll")]
-        private static extern bool EnumThreadWindows(int dwThreadId, EnumWindowsProc lpfn, nint lParam);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(nint hWnd, out uint processId);
 
         [DllImport("user32.dll")]
         private static extern int GetWindowText(nint hWnd, StringBuilder text, int count);
 
+
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern uint GetWindowThreadProcessId(nint hWnd, out uint processId);
+        public static extern IntPtr FindWindowEx(
+            IntPtr hwndParent,      // Handle of the parent window
+            IntPtr hwndChildAfter,  // Handle to a child window (to search *after*)
+            string? lpszClass,      // The Class Name
+            string? lpszWindow      // The Window Name (Caption)
+        );
 
 
         #region Console Stuff
@@ -248,7 +258,8 @@ namespace H2MLauncher.Core.Game
 
         public Task<bool> JoinServer(string ip, string port, string? password = null)
         {
-            //const string disconnectCommand = "disconnect";
+            // TODO: (if necessary) disconnect first, wait for disconnect then connect.
+            // Right now the games takes way too long to disconnect
             string connectCommand = $"connect {ip}:{port}";
 
             if (password is not null)
@@ -264,67 +275,61 @@ namespace H2MLauncher.Core.Game
             return ExecuteCommandAsync(["disconnect"]);
         }
 
-
-        static IntPtr MakeLParamForKey(
-            ushort repeatCount,
-            byte scanCode,
-            bool extended,
-            bool altDown,
-            bool previousKeyState,
-            bool transitionState)
+        public async Task<bool> ExecuteCommandAsync(string[] commands, bool bringGameWindowToForeground = true)
         {
-            // Build as unsigned 32-bit to avoid sign issues.
-            uint l = 0;
+            Process? process = FindProcess();
+            if (process == null)
+            {
+                _errorHandlingService.HandleError("Could not find the h2m-mod terminal window.");
+                return false;
+            }
 
-            // Bits 0-15: repeat count
-            l |= (uint)(repeatCount & 0xFFFF);
+            // Try to get handle of the real console
+            nint consoleHandle = GetConsoleHandle(process, freeConsole: false);
 
-            // Bits 16-23: scan code
-            l |= (uint)(scanCode & 0xFFu) << 16;
+            try
+            {
+                if (consoleHandle == IntPtr.Zero)
+                {
+                    // Console not available, work with fancy custom console
+                    ExecuteCommandsInFancyConsole(process, commands);
+                }
+                else
+                {
+                    // Write directly to console input
+                    foreach (string command in commands)
+                    {
+                        if (!WriteToConsoleInput(command + "\r"))
+                        {
+                            _logger.LogWarning("Could not write command {command} to console input", command);
+                        }
 
-            // Bit 24: extended
-            if (extended) l |= 1u << 24;
+                        // Sleep for 1ms to allow the command to be processed
+                        await Task.Delay(1);
+                    }
+                }
 
-            // Bit 29: context (ALT)
-            if (altDown) l |= 1u << 29;
+                if (bringGameWindowToForeground)
+                {
+                    // Set game as foreground window
+                    var hGameWindow = FindT7XWindow(process);
+                    SetForegroundWindow(hGameWindow);
+                }
 
-            // Bit 30: previous key state
-            if (previousKeyState) l |= 1u << 30;
-
-            // Bit 31: transition state (0 = keydown, 1 = keyup)
-            if (transitionState) l |= 1u << 31;
-
-            return new IntPtr(unchecked((int)l));
+                return true;
+            }
+            finally
+            {
+                if (consoleHandle != nint.Zero)
+                {
+                    FreeConsole();
+                }
+            }
         }
 
-        static void SendTildeToWindow(nint hWnd)
-        {
-            // Typical scan code for OEM_3 on many keyboards is 0x29 (but layouts vary).
-            // For WM_KEYDOWN/WM_KEYUP lParam we include a scan code field; but many apps ignore lParam.
-            byte scan = 0x29; // common value, not guaranteed for all layouts
-            IntPtr lParamDown = MakeLParamForKey(1, scan, false, false, false, false);
-            IntPtr lParamUp = MakeLParamForKey(1, scan, false, false, true, true);
-
-            // Send WM_KEYDOWN then WM_KEYUP
-            SendMessage(hWnd, WM_KEYDOWN, 192, lParamDown);
-            SendMessage(hWnd, WM_KEYUP, 192, lParamUp);
-        }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr SetFocus(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr FindWindowEx(
-            IntPtr hwndParent,      // Handle of the parent window
-            IntPtr hwndChildAfter,  // Handle to a child window (to search *after*)
-            string? lpszClass,      // The Class Name
-            string? lpszWindow      // The Window Name (Caption)
-        );
-
+        /// <summary>
+        /// Execute commands in the fancy custom T7X console by sending messages to the text box.
+        /// </summary>
         private static bool ExecuteCommandsInFancyConsole(Process process, string[] commands)
         {
             // Grab the handle of the console window
@@ -356,53 +361,52 @@ namespace H2MLauncher.Core.Game
             return true;
         }
 
-        public async Task<bool> ExecuteCommandAsync(string[] commands, bool bringGameWindowToForeground = true)
+        /// <summary>
+        /// Make lParam for <see cref="PostMessage(nint, uint, nint, nint)"/> or <see cref="SendMessage(nint, uint, nint, nint)"/>.
+        /// </summary>        
+        private static IntPtr MakeLParamForKey(
+            ushort repeatCount,
+            byte scanCode,
+            bool extended,
+            bool altDown,
+            bool previousKeyState,
+            bool transitionState)
         {
-            Process? process = FindProcess();
-            if (process == null)
-            {
-                _errorHandlingService.HandleError("Could not find the h2m-mod terminal window.");
-                return false;
-            }
+            // Build as unsigned 32-bit to avoid sign issues.
+            uint l = 0;
 
-            nint consoleHandle = GetConsoleHandle(process, freeConsole: false);
+            // Bits 0-15: repeat count
+            l |= (uint)(repeatCount & 0xFFFF);
 
-            try
-            {
-                if (consoleHandle == IntPtr.Zero)
-                {       
-                    ExecuteCommandsInFancyConsole(process, commands);
-                }
-                else
-                {
-                    foreach (string command in commands)
-                    {
-                        if (!WriteToConsoleInput(command + "\r"))
-                        {
-                            _logger.LogWarning("Could not write command {command} to console input", command);
-                        }
+            // Bits 16-23: scan code
+            l |= (uint)(scanCode & 0xFFu) << 16;
 
-                        // Sleep for 1ms to allow the command to be processed
-                        await Task.Delay(1);
-                    }
-                }
+            // Bit 24: extended
+            if (extended) l |= 1u << 24;
 
-                if (bringGameWindowToForeground)
-                {
-                    // Set H2M to foreground window
-                    var hGameWindow = FindT7XWindow(process);
-                    SetForegroundWindow(hGameWindow);
-                }
+            // Bit 29: context (ALT)
+            if (altDown) l |= 1u << 29;
 
-                return true;
-            }
-            finally
-            {
-                if (consoleHandle != nint.Zero)
-                {
-                    FreeConsole();
-                }
-            }
+            // Bit 30: previous key state
+            if (previousKeyState) l |= 1u << 30;
+
+            // Bit 31: transition state (0 = keydown, 1 = keyup)
+            if (transitionState) l |= 1u << 31;
+
+            return new IntPtr(unchecked((int)l));
+        }
+
+        private static void SendTildeToWindow(nint hWnd)
+        {
+            // Typical scan code for OEM_3 on many keyboards is 0x29 (but layouts vary).
+            // For WM_KEYDOWN/WM_KEYUP lParam we include a scan code field; but many apps ignore lParam.
+            byte scan = 0x29; // common value, not guaranteed for all layouts
+            IntPtr lParamDown = MakeLParamForKey(1, scan, false, false, false, false);
+            IntPtr lParamUp = MakeLParamForKey(1, scan, false, false, true, true);
+
+            // Send WM_KEYDOWN then WM_KEYUP
+            SendMessage(hWnd, WM_KEYDOWN, 192, lParamDown);
+            SendMessage(hWnd, WM_KEYUP, 192, lParamUp);
         }
 
         private static IEnumerable<INPUT_RECORD> CreateKeyPressInput(char character)

@@ -13,6 +13,7 @@ public class T7GameMemory : IDisposable
     const nint ADDR_CLIENT_UI_ACTIVES = 0x53D8BC0;
     const nint ADDR_JOIN_CLIENT = 0x1574A640;
     const nint ADDR_CONNECTED_SERVER_BASE = 0x53D8BB8;
+    const nint ADDR_USERMAPS_COUNT = 0x167B3580;
 
     public Process Process { get; }
 
@@ -78,7 +79,7 @@ public class T7GameMemory : IDisposable
 
     public int GetUsermapsCount()
     {
-        nint addr = _moduleBaseAddress + 0x167B3580;
+        nint addr = _moduleBaseAddress + ADDR_USERMAPS_COUNT;
         if (ProcessMemory.ReadProcessMemoryUInt(_processHandle, addr, out uint count))
         {
             return (int)count;

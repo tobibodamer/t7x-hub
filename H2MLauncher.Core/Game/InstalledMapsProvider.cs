@@ -22,7 +22,6 @@ namespace H2MLauncher.Core.Game
             _installedMaps = [];
             InstalledMaps = _installedMaps;
 
-            //_gameDirectoryService.UsermapsChanged += GameDirectoryService_UsermapsChanged;
             _gameDirectoryService.FastFileChanged += GameDirectoryService_FastFileChanged;
             _resourceSettings = resourceSettings;
 
@@ -30,11 +29,6 @@ namespace H2MLauncher.Core.Game
         }
 
         private void GameDirectoryService_FastFileChanged(string fileName, string mapName)
-        {
-            UpdateInstalledMaps();
-        }
-
-        private void GameDirectoryService_UsermapsChanged(string? triggeredByPath, IReadOnlyList<string> usermaps)
         {
             UpdateInstalledMaps();
         }
@@ -52,18 +46,13 @@ namespace H2MLauncher.Core.Game
                 }
             }
 
-            //// usermaps
-            //foreach (var usermap in _gameDirectoryService.Usermaps)
-            //{
-            //    _installedMaps.Add(usermap);
-            //}
+            // TODO: support user maps / workshop content
 
             MapsChanged?.Invoke(this);
         }
 
         public void Dispose()
         {
-            //_gameDirectoryService.UsermapsChanged -= GameDirectoryService_UsermapsChanged;
             _gameDirectoryService.FastFileChanged -= GameDirectoryService_FastFileChanged;
         }
     }

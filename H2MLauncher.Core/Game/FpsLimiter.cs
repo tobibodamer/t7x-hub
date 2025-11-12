@@ -256,11 +256,6 @@ public sealed class FpsLimiter : IDisposable
                 return;
             }
 
-            //if (isLimited)
-            //{
-            //    await Task.Delay(5000, ct);
-            //}
-
             _logger.LogDebug("Changing max FPS to {maxFps} (limited: {limited}).", maxFps, isLimited);
 
             bool success = await ExecuteMaxFpsCommand(maxFps);

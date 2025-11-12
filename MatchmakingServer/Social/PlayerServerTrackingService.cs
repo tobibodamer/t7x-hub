@@ -364,18 +364,7 @@ public class PlayerServerTrackingService : BackgroundService, IPlayerServerTrack
             _logger.LogTrace("Matching server {server}: {hostName} | {players}", 
                 s, 
                 s.LastServerInfo?.HostName,
-                s.LastStatusResponse?.Players.Select(p => p.PlayerName));
-
-            //if (s.LastStatusResponse is not null &&
-            //    s.LastStatusResponse.Players.Any(p => p.PlayerName.Equals(player.Name)))
-            //{
-            //    score += 2;
-            //}
-            //else if (s.LastStatusResponse is not null && ServerMatchingRequirePlayerNameConfirmation)
-            //{
-            //    // player name could not be confirmed
-            //    return 0;
-            //}            
+                s.LastStatusResponse?.Players.Select(p => p.PlayerName));   
 
             if (s.LastStatusResponse is not null &&
                 s.LastStatusResponse.Players.Any(p => p.PlayerName.Equals(player.Name)))
