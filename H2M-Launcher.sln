@@ -11,10 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchmakingServer", "Matchm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchmakingServer.Tests", "MatchmakingServer.Tests\MatchmakingServer.Tests.csproj", "{0A39CB47-BFA0-4F7A-B69D-92687A477402}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UpdateFileVersionOnTag", "UpdateFileVersionOnTag\UpdateFileVersionOnTag.csproj", "{293DE047-637B-4CEF-ADF6-32DFEC790973}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateFileVersionOnTag.Tests", "UpdateFileVersionOnTag.Tests\UpdateFileVersionOnTag.Tests.csproj", "{2B24D723-8ABC-4CC6-A772-8D39FA2E9F74}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{92706827-73FE-4723-9BB8-150F566A763B}"
 EndProject
 Global

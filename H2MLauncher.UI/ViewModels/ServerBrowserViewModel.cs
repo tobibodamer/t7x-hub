@@ -756,7 +756,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             }
 
             // Get servers from the master(s)
-
+            
             Task[] serverInfoTasks = await _masterServerService.FetchServersAsync(linkedCancellation.Token)
                 .ToObservable()
                 .Buffer(TimeSpan.FromSeconds(0.5))

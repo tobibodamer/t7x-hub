@@ -57,6 +57,7 @@ public class Factory : WebApplicationFactory<Program>
 
                 // see https://github.com/dotnet/efcore/issues/34431
                 options.ConfigureWarnings(warnings => warnings.Log(RelationalEventId.PendingModelChangesWarning));
+                options.EnableSensitiveDataLogging();
             }, optionsLifetime: ServiceLifetime.Singleton);
 
             services.AddSingleton(SocialHubContextMock);

@@ -78,8 +78,8 @@ namespace H2MLauncher.UI.ViewModels
                 },
                 () => !HasFriendRequested);
 
-            CopyUserIdCommand = new RelayCommand(() => Clipboard.SetText(Id));
-            CopyUserNameCommand = new RelayCommand(() => Clipboard.SetText(UserName), () => !string.IsNullOrEmpty(UserName));
+            CopyUserIdCommand = new RelayCommand(() => Clipboard.SetText(Id!));
+            CopyUserNameCommand = new RelayCommand(() => Clipboard.SetText(UserName!), () => !string.IsNullOrEmpty(UserName));
         }
 
         [GeneratedRegex(@"(\^\d)")]

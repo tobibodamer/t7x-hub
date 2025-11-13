@@ -1,13 +1,11 @@
-# HMW Hub: Queue, Party, Connect (formerly H2M-Launcher)
+# T7X Hub: Queue, Party, Connect (fork of [HMW-Hub](https://github.com/Bowhza/HMW-Hub) (fka H2M-Launcher))
 
-**This launcher aims to provide features like server queueing, friends and party system to HorizonMW. The project originally started out to address some issues of the in-game server browser in the legacy H2M.**
+**This launcher aims to provide features like server queueing, friends and party system to T7X. The project originally started out to address some issues of the in-game server browser in the legacy H2M.**
 
-[<img src="https://img.shields.io/github/v/release/Bowhza/H2M-Launcher">](https://github.com/Bowhza/H2M-Launcher/releases)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Bowhza/H2M-Launcher/total)
+[<img src="https://img.shields.io/github/v/release/tobibodamer/t7x-hub">](https://github.com/tobibodamer/t7x-hub/releases)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/tobibodamer/t7x-hub/total)
 
 ### **Discord for HMW Hub**
-
-**Join if you want to stay up-to-date with the launcher, have questions, suggestions, or looking for people to play HMW with.**
 
 [<img src="https://img.shields.io/discord/1276483126041776192?logo=discord&logoColor=%23FFFFFF&label=Discord&labelColor=%235865F2&link=https%3A%2F%2Fdiscord.gg%2FNeBYKxq5Ru">](https://discord.com/invite/NeBYKxq5Ru)
 
