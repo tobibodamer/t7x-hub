@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 using H2MLauncher.Core.Game;
@@ -21,7 +22,11 @@ namespace H2MLauncher.Core.Services
         /// <summary>
         /// Type of the properties.json file in the T7X players directory
         /// </summary>
-        public record Properties(string? PlayerName);
+        public record Properties
+        {
+            [JsonPropertyName("playerName")]
+            public string? PlayerName { get; init; }
+        }
 
         private const string T7X_PLAYERS_DIR = "t7x\\players";
         private const string PROPERTIES_FILENAME = "properties.json";
