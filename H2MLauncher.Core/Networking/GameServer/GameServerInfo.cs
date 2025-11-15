@@ -1,7 +1,5 @@
 ﻿using System.Net;
 
-using H2MLauncher.Core.Models;
-
 namespace H2MLauncher.Core.Networking.GameServer
 {
     public record GameServerInfo
@@ -37,7 +35,5 @@ namespace H2MLauncher.Core.Networking.GameServer
         public int RealPlayerCount => Clients - Bots;
 
         public int FreeSlots => MaxClients - RealPlayerCount;
-
-        public GamePlayerStatus[] Players { get; init; } = [];
     }
 }

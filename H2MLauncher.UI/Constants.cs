@@ -5,7 +5,7 @@ namespace H2MLauncher.UI
     public static class Constants
     {
         public static readonly string LocalDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BetterH2MLauncher");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "t7x-hub");
 
         public static readonly string LogFilePath = Path.Combine(LocalDir, "log.txt");
 
@@ -40,7 +40,7 @@ namespace H2MLauncher.UI
 
         public const string DISCORD_INVITE_LINK = "https://discord.gg/J6cxWGvy4C";
 
-        public const string GITHUB_REPO = "https://github.com/Bowhza/H2M-Launcher";
+        public const string GITHUB_REPO = "https://github.com/tobibodamer/t7x-hub";
 
         // Resources
         public const string BackgroundImageSourceKey = "BackgroundImageSource";

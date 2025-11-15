@@ -1,4 +1,6 @@
-﻿using MatchmakingServer.Authentication;
+﻿using System.Reflection.Metadata;
+
+using MatchmakingServer.Authentication;
 using MatchmakingServer.Authentication.JWT;
 using MatchmakingServer.Authentication.Passwordless;
 using MatchmakingServer.Authentication.Player;
@@ -6,9 +8,10 @@ using MatchmakingServer.Authentication.Player;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace MatchmakingServer;
 
@@ -73,23 +76,20 @@ public static class WebApplicationBuilderExtensions
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "MatchmakingServer", Version = "v1" });
 
+
             OpenApiSecurityScheme apiKeyScheme = new()
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = ApiKeyDefaults.AuthenticationScheme,
-                },
+                Scheme = ApiKeyDefaults.AuthenticationScheme,
                 In = ParameterLocation.Header,
                 Name = ApiKeyDefaults.RequestHeaderKey,
                 Type = SecuritySchemeType.ApiKey,
             };
 
             c.AddSecurityDefinition(ApiKeyDefaults.AuthenticationScheme, apiKeyScheme);
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement() {
-            {
-                apiKeyScheme, []
-            }
+            c.AddSecurityRequirement((document) => new OpenApiSecurityRequirement() {
+                {
+                    new OpenApiSecuritySchemeReference(ApiKeyDefaults.AuthenticationScheme, document), []
+                }
             });
         });
     }

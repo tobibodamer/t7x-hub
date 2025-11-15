@@ -39,8 +39,8 @@ namespace H2MLauncher.UI.ViewModels;
 public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<SelectServerMessage>, IDisposable
 {
     private readonly IMasterServerService _masterServerService;
-    private readonly IGameServerInfoService<IServerConnectionDetails> _tcpGameServerCommunicationService;
-    private readonly H2MCommunicationService _h2MCommunicationService;
+    private readonly IGameServerInfoService<IServerConnectionDetails> _gameServerCommunicationService;
+    private readonly T7XCommunicationService _h2MCommunicationService;
     private readonly LauncherService _h2MLauncherService;
     private readonly IClipBoardService _clipBoardService;
     private readonly ISaveFileService _saveFileService;
@@ -111,7 +111,8 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         _h2MLauncherOptions.CurrentValue.ServerQueueing;
 
     private ServerTabViewModel<ServerViewModel> AllServersTab { get; set; }
-    private ServerTabViewModel<ServerViewModel> HMWServersTab { get; set; }
+    private ServerTabViewModel<ServerViewModel> MultiplayerTab { get; set; }
+    private ServerTabViewModel<ServerViewModel> ZombiesTab { get; set; }
     private ServerTabViewModel<ServerViewModel> FavouritesTab { get; set; }
     private ServerTabViewModel<ServerViewModel> RecentsTab { get; set; }
     public ObservableCollection<IServerTabViewModel> ServerTabs { get; set; } = [];
@@ -134,9 +135,9 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
     public IAsyncRelayCommand EnterMatchmakingCommand { get; }
 
     public ServerBrowserViewModel(
-        IMasterServerService masterServerService,
-        [FromKeyedServices("TCP")] IGameServerInfoService<IServerConnectionDetails> tcpGameServerService,
-        H2MCommunicationService h2MCommunicationService,
+        [FromKeyedServices("T7X")] IMasterServerService masterServerService,
+        [FromKeyedServices("UDP")] IGameServerInfoService<IServerConnectionDetails> udpGameServerInfoService,
+        T7XCommunicationService h2MCommunicationService,
         LauncherService h2MLauncherService,
         IClipBoardService clipBoardService,
         ILogger<ServerBrowserViewModel> logger,
@@ -155,7 +156,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         SocialOverviewViewModel socialOverviewViewModel)
     {
         _masterServerService = masterServerService;
-        _tcpGameServerCommunicationService = tcpGameServerService;
+        _gameServerCommunicationService = udpGameServerInfoService;
         _h2MCommunicationService = h2MCommunicationService;
         _h2MLauncherService = h2MLauncherService;
         _clipBoardService = clipBoardService;
@@ -177,7 +178,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         LaunchH2MCommand = new RelayCommand(LaunchH2M);
         CheckUpdateStatusCommand = new AsyncRelayCommand(CheckUpdateStatusAsync);
         CopyToClipBoardCommand = new RelayCommand<ServerViewModel>(DoCopyToClipBoardCommand);
-        SaveServersCommand = new AsyncRelayCommand(SaveServersAsync);
+        SaveServersCommand = new AsyncRelayCommand(() => SaveServersAsync());
         UpdateLauncherCommand = new AsyncRelayCommand(DoUpdateLauncherCommand, () => UpdateStatusText != "");
         OpenReleaseNotesCommand = new RelayCommand(DoOpenReleaseNotesCommand);
         RestartCommand = new RelayCommand(DoRestartCommand);
@@ -196,7 +197,12 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             throw new Exception("Could not add all servers tab");
         }
 
-        if (!TryAddNewTab("HMW Servers", out ServerTabViewModel? hmwServersTab))
+        if (!TryAddNewTab("Multiplayer", out ServerTabViewModel? mpServersTab))
+        {
+            throw new Exception("Could not add HMW servers tab");
+        }
+
+        if (!TryAddNewTab("Zombies", out ServerTabViewModel? zmServersTab))
         {
             throw new Exception("Could not add HMW servers tab");
         }
@@ -216,12 +222,13 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             throw new Exception("Could not add recents tab");
         }
 
-        ServerTabs.Remove(allServersTab);
+        //ServerTabs.Remove(allServersTab);
         AllServersTab = allServersTab;
-        HMWServersTab = hmwServersTab;
+        MultiplayerTab = mpServersTab;
+        ZombiesTab = zmServersTab;
         FavouritesTab = favouritesTab;
 
-        SelectedTab = HMWServersTab;
+        SelectedTab = allServersTab;
 
         H2MLauncherSettings oldSettings = _h2MLauncherOptions.CurrentValue;
         _h2MLauncherOptions.OnChange((newSettings, _) =>
@@ -632,26 +639,27 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         return AdvancedServerFilter.ApplyFilter(server);
     }
 
-    private async Task SaveServersAsync()
+    private async Task SaveServersAsync(IServerTabViewModel? tab = null)
     {
         // Create a list of "Ip:Port" strings
-        List<string> ipPortList = SelectedTab.Servers.Where(ServerFilter)
-                                         .Select(server => $"{server.Ip}:{server.Port}")
-                                         .ToList();
+        string[] ipPortList = (tab ?? SelectedTab).Servers
+            .Where(ServerFilter)
+            .Select(server => $"{server.Ip}:{server.Port}")
+            .ToArray();
 
         // Serialize the list into JSON format
-        string jsonString = JsonSerializer.Serialize(ipPortList, JsonContext.Default.ListString);
+        string txtString = string.Join('\n', ipPortList);
 
         try
         {
             // Store the server list into the corresponding directory
-            _logger.LogDebug("Storing server list into \"/players2/favourites.json\"");
+            _logger.LogDebug("Storing server list into \"/t7x/players/user/favorite_servers.txt\"");
 
-            string directoryPath = "players2";
+            string directoryPath = "t7x\\players\\user";
 
-            if (!string.IsNullOrEmpty(_h2MLauncherOptions.CurrentValue.MWRLocation))
+            if (!string.IsNullOrEmpty(_h2MLauncherOptions.CurrentValue.GameLocation))
             {
-                string? gameDirectory = Path.GetDirectoryName(_h2MLauncherOptions.CurrentValue.MWRLocation);
+                string? gameDirectory = Path.GetDirectoryName(_h2MLauncherOptions.CurrentValue.GameLocation);
 
                 directoryPath = Path.Combine(gameDirectory ?? "", directoryPath);
             }
@@ -661,24 +669,25 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
             if (!Directory.Exists(directoryPath))
             {
                 // let user choose
-                fileName = await _saveFileService.SaveFileAs("favourites.json", "JSON file (*.json)|*.json") ?? "";
+                fileName = await _saveFileService.SaveFileAs("favorite_servers.txt", "Text file (*.txt)|*.txt") ?? "";
                 if (string.IsNullOrEmpty(fileName))
                     return;
             }
             else
             {
-                fileName = Path.Combine(directoryPath, "favourites.json");
+                fileName = Path.Combine(directoryPath, "favorite_servers.txt");
             }
 
-            await File.WriteAllTextAsync(fileName, jsonString);
+            await File.WriteAllTextAsync(fileName, txtString);
 
             _logger.LogInformation("Stored server list into {fileName}", fileName);
 
-            StatusText = $"{ipPortList.Count} servers saved to {Path.GetFileName(fileName)}";
+            StatusText = $"{ipPortList.Length} servers saved to {Path.GetFileName(fileName)}";
         }
         catch (Exception ex)
         {
-            _errorHandlingService.HandleException(ex, "Could not save favourites.json file. Make sure the exe is inside the root of the game folder.");
+            _errorHandlingService.HandleException(ex,
+                "Could not save favorite_servers.txt file. Make sure the exe is inside the root of the game folder.");
         }
     }
 
@@ -741,18 +750,18 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         {
             StatusText = "Refreshing servers...";
 
-            AllServersTab.Servers.Clear();
-            HMWServersTab.Servers.Clear();
-            FavouritesTab.Servers.Clear();
-            RecentsTab.Servers.Clear();
+            foreach (var tab in ServerTabs.OfType<ServerTabViewModel>())
+            {
+                tab.Servers.Clear();
+            }
 
             // Get servers from the master(s)
-
+            
             Task[] serverInfoTasks = await _masterServerService.FetchServersAsync(linkedCancellation.Token)
                 .ToObservable()
                 .Buffer(TimeSpan.FromSeconds(0.5))
                 .Where(batch => batch.Count > 0)
-                .Select(batch => GetServerInfo(_tcpGameServerCommunicationService, batch, linkedCancellation.Token))
+                .Select(batch => GetServerInfo(_gameServerCommunicationService, batch, linkedCancellation.Token))
                 .ToArray();
 
             await Task.WhenAll(serverInfoTasks);
@@ -775,6 +784,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         List<SimpleServerInfo> userFavorites = GetFavoritesFromSettings();
         List<RecentServerInfo> userRecents = GetRecentsFromSettings();
 
+        bool isZombies = serverInfo.GameType.Equals("zclassic");
         bool isFavorite = userFavorites.Any(fav => fav.ServerIp == server.Ip && fav.ServerPort == server.Port);
         RecentServerInfo? recentInfo = userRecents.FirstOrDefault(recent => recent.ServerIp == server.Ip && recent.ServerPort == server.Port);
 
@@ -803,6 +813,15 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         // Game server responded -> online
         AllServersTab.Servers.Add(serverViewModel);
 
+        if (isZombies)
+        {
+            ZombiesTab.Servers.Add(serverViewModel);
+        }
+        else
+        {
+            MultiplayerTab.Servers.Add(serverViewModel);
+        }
+
         if (isFavorite)
         {
             FavouritesTab.Servers.Add(serverViewModel);
@@ -812,11 +831,6 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
         {
             serverViewModel.Joined = recentInfo.Joined;
             RecentsTab.Servers.Add(serverViewModel);
-        }
-
-        if (serverViewModel.Protocol == 3) // == HMW
-        {
-            HMWServersTab.Servers.Add(serverViewModel);
         }
     }
 
@@ -853,7 +867,7 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
         if (dialogResult == true)
         {
-            _h2MCommunicationService.LaunchH2MMod();
+            _h2MCommunicationService.Launch();
         }
 
         return false;
@@ -891,21 +905,21 @@ public partial class ServerBrowserViewModel : ObservableRecipient, IRecipient<Se
 
     public void Receive(SelectServerMessage message)
     {
-        if (SelectedTab != HMWServersTab)
+        if (SelectedTab != AllServersTab)
         {
-            SelectedTab = HMWServersTab;
+            SelectedTab = AllServersTab;
         }
 
         ServerViewModel? serverViewModel = FindServerViewModel(message.Value);
         if (serverViewModel is not null && SelectedTab.Servers.Contains(serverViewModel))
         {
-            HMWServersTab.SelectedServer = serverViewModel;
+            AllServersTab.SelectedServer = serverViewModel;
         }
     }
 
     private void LaunchH2M()
     {
-        _h2MCommunicationService.LaunchH2MMod();
+        _h2MCommunicationService.Launch();
     }
 
     public void Dispose()

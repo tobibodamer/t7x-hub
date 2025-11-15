@@ -72,24 +72,26 @@ namespace H2MLauncher.Core.Networking.GameServer
             string receivedMessage = Encoding.UTF8.GetString(result.Buffer);
 
             // Split the string based on the \xFF\xFF\xFF\xFF delimiter
-            bool startsWithDelimiter = IsDelimiterAtStart(result.Buffer);
+            (bool startsWithDelimiter, int delimiterStart) = IsDelimiterAtStart(result.Buffer);
             if (!startsWithDelimiter)
             {
                 // Invalid message: Message does not start with the expected delimiter
                 return;
             }
 
+            int delimiterEnd = delimiterStart + 4;
+
             int indexOfSeparator = receivedMessage.IndexOfAny([' ', '\n']);
             if (indexOfSeparator < 0)
             {
-                // No seperator found in message
+                // No separator found in message
                 return;
             }
 
             // Extract the command name
-            string commandName = receivedMessage[4..indexOfSeparator];
+            string commandName = receivedMessage[delimiterEnd..indexOfSeparator];
 
-            // Extract the seperator char
+            // Extract the separator char
             char separator = receivedMessage[indexOfSeparator];
 
             // Extract the data after the separator char
@@ -150,13 +152,27 @@ namespace H2MLauncher.Core.Networking.GameServer
         /// </summary>
         /// <param name="responseBytes"></param>
         /// <returns></returns>
-        private static bool IsDelimiterAtStart(byte[] responseBytes)
+        private static (bool, int) IsDelimiterAtStart(byte[] responseBytes)
         {
-            return responseBytes.Length >= 4 &&
-                   responseBytes[0] == 0xFF &&
+            if (responseBytes.Length < 4)
+            {
+                return (false, -1);
+            }
+
+            if (responseBytes[0] != 0xFF)
+            {
+                return (
+                    responseBytes.Length >= 5 &&
+                    responseBytes[1] == 0xFF &&
+                    responseBytes[2] == 0xFF &&
+                    responseBytes[3] == 0xFF &&
+                    responseBytes[4] == 0xFF, 1);
+            }
+
+            return (responseBytes[0] == 0xFF &&
                    responseBytes[1] == 0xFF &&
                    responseBytes[2] == 0xFF &&
-                   responseBytes[3] == 0xFF;
+                   responseBytes[3] == 0xFF, 0);
         }
 
         /// <summary>
@@ -192,13 +208,13 @@ namespace H2MLauncher.Core.Networking.GameServer
         /// </summary>
         /// <param name="endPoint">Endpoint of the server.</param>
         /// <returns>Number of sent bytes.</returns>
-        public ValueTask<int> SendAsync(IPEndPoint endPoint, string command, string data = "", char seperator = ' ',
+        public ValueTask<int> SendAsync(IPEndPoint endPoint, string command, string data = "", char separator = ' ',
             CancellationToken cancellationToken = default)
         {
             string packet = ""; // "\xFF\xFF\xFF\xFF";
 
             packet += command;
-            packet += seperator;
+            packet += separator;
             packet += data;
 
             byte[] message = [0xff, 0xff, 0xff, 0xff, .. Encoding.ASCII.GetBytes(packet)];

@@ -15,5 +15,5 @@ using System.Windows;
 
 [assembly: AssemblyVersion("2.6.0.0")]
 [assembly: AssemblyFileVersion("2.6.0.0")]
-[assembly: AssemblyTitle("Better H2M-Launcher")]
+[assembly: AssemblyTitle("T7X Hub")]
 [assembly: SupportedOSPlatform("windows")]

@@ -13,8 +13,8 @@ services:
   nginx:
     build: nginx/
     ports:
-      - "443:443"
-      - "80:80"
+      - "6443:443"
+      - "680:80"
     environment:
       - DOMAIN=${DOMAIN:-localhost}
     volumes:
@@ -44,8 +44,8 @@ services:
       Serilog__WriteTo__1__Args__rollingInterval: Day
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=database;Username=${DB_USER:-username};Password=${DB_PASSWORD:-password}
     ports:
-      - 9100:9000
-      - 9101:9001
+      - 6000:9000
+      - 6001:9001
     volumes:
       - ./MatchmakingServer/appsettings.json:/app/appsettings.json
       - ${LOG_DIR:-./logs}:/app/logs
@@ -63,10 +63,9 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    user: ${UID:-1001}:${GID:-1001}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:6432:5432"
     environment:
       POSTGRES_USER: ${DB_USER:-username}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
@@ -87,12 +86,12 @@ services:
       ADMINER_DEFAULT_DB_NAME: database
       ADMINER_DEFAULT_DB_DRIVER: pgsql
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:6080:8080"
 
   pgbackups:
     image: prodrigestivill/postgres-backup-local
     restart: always
-    user: postgres:postgres
+    user: ${UID:-postgres}:${GID:-postgres}
     volumes:
         - ${DB_BACKUP_DIR:-./pgbackup}:/backups
     links:

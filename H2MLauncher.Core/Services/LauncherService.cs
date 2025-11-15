@@ -9,7 +9,7 @@ namespace H2MLauncher.Core.Services
 {
     public sealed class LauncherService
     {
-        private const string GITHUB_REPOSITORY = "https://api.github.com/repos/Bowhza/H2M-Launcher/releases";
+        private const string GITHUB_REPOSITORY = "https://api.github.com/repos/tobibodamer/t7x-hub/releases";
 
         private readonly ILogger<LauncherService> _logger;
         private readonly HttpClient _httpClient;
@@ -31,7 +31,7 @@ namespace H2MLauncher.Core.Services
             get
             {
                 Version version = Assembly.GetEntryAssembly()!.GetName().Version!;
-                string versionString = $"H2M-v{version.Major}.{version.Minor}.{version.Build}";
+                string versionString = $"T7X-v{version.Major}.{version.Minor}.{version.Build}";
                 if (!string.IsNullOrWhiteSpace(CurrentPreReleaseLabel))
                 {
                     //H2M-v0.0.0-beta
@@ -55,7 +55,7 @@ namespace H2MLauncher.Core.Services
         {
             get
             {
-                return Assembly.GetEntryAssembly()!.GetName().Name ?? "H2MLauncher.UI";
+                return Assembly.GetEntryAssembly()!.GetName().Name ?? "t7x-hub";
             }
         }
 
@@ -66,7 +66,7 @@ namespace H2MLauncher.Core.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             // NOTE: GitHub requires a User-Agent to be set to interact with their API.
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "H2M-Launcher-App");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "T7X-Hub-Launcher");
             _errorHandlingService = errorHandlingService ?? throw new ArgumentNullException(nameof(errorHandlingService));
         }
 

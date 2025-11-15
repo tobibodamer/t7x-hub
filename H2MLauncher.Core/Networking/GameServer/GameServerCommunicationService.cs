@@ -176,7 +176,12 @@ namespace H2MLauncher.Core.Services
 
             public CommandMessage CreateMessage()
             {
-                return new CommandMessage(CommandName);
+                byte[] challengeBuffer = new byte[8];
+                Random.Shared.NextBytes(challengeBuffer);
+
+                string challenge = Convert.ToHexString(challengeBuffer);
+
+                return new CommandMessage(CommandName, challenge);
             }
 
             public GameServerInfo? ParseResponse(Response response)
@@ -194,6 +199,11 @@ namespace H2MLauncher.Core.Services
 
                     string? svRunning = info.Get("sv_running");
                     if (svRunning != "1")
+                    {
+                        return null;
+                    }
+
+                    if (info.Get("challenge") != response.Request.Message.Data)
                     {
                         return null;
                     }
@@ -232,7 +242,12 @@ namespace H2MLauncher.Core.Services
 
             public CommandMessage CreateMessage()
             {
-                return new CommandMessage(CommandName);
+                byte[] challengeBuffer = new byte[8];
+                Random.Shared.NextBytes(challengeBuffer);
+
+                string challenge = Convert.ToHexString(challengeBuffer);
+
+                return new CommandMessage(CommandName, challenge);
             }
 
             public GameServerStatus? ParseResponse(Response response)
@@ -772,76 +787,6 @@ namespace H2MLauncher.Core.Services
             // Not passing token because it is only for sending.
             // Passing 'WithCancellation' to enumerable will trigger the cancellation regardless (idk how this magic works)
             return channel.Reader.ReadAllAsync(CancellationToken.None);
-        }
-
-        private static async IAsyncEnumerable<Response> ReadRequestsUntilThenCancel(
-            IAsyncEnumerable<Response> enumerable,
-            IReadOnlyList<Request> requests,
-            TimeSpan readUntil,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            using CancellationTokenSource timeoutCancellation = new(readUntil);
-            using CancellationTokenSource linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellation.Token);
-
-            await using IAsyncEnumerator<Response> enumerator = enumerable.GetAsyncEnumerator(linkedCancellation.Token);
-
-            while (true)
-            {
-                Response nextResponse;
-                try
-                {
-                    if (!await enumerator.MoveNextAsync(cancellationToken).ConfigureAwait(false))
-                    {
-                        yield break;
-                    }
-                    nextResponse = enumerator.Current;
-                }
-                catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested)
-                {
-                    foreach (Request request in requests)
-                    {
-                        request.TryCancel();
-                    }
-
-                    yield break;
-                }
-                yield return nextResponse;
-            }
-        }
-
-        private static async IAsyncEnumerable<Response> ReadRequestsUntilThenCancel(
-            ChannelReader<Response> reader,
-            IReadOnlyList<Request> requests,
-            TimeSpan readUntil,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            using CancellationTokenSource timeoutCancellation = new(readUntil);
-            using CancellationTokenSource linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellation.Token);
-
-            await using IAsyncEnumerator<Response> enumerator = reader.ReadAllAsync().GetAsyncEnumerator(linkedCancellation.Token);
-
-            while (true)
-            {
-                Response nextResponse;
-                try
-                {
-                    if (!await enumerator.MoveNextAsync(cancellationToken).ConfigureAwait(false))
-                    {
-                        yield break;
-                    }
-                    nextResponse = enumerator.Current;
-                }
-                catch (OperationCanceledException) when (timeoutCancellation.IsCancellationRequested)
-                {
-                    foreach (Request request in requests)
-                    {
-                        request.TryCancel();
-                    }
-
-                    yield break;
-                }
-                yield return nextResponse;
-            }
         }
 
         /// <summary>

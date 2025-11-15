@@ -127,12 +127,12 @@ public sealed class SocialClient : HubClient<ISocialHub>, ISocialClient, IDispos
             return null;
         }
 
-        // (unfortunately we cannot use port because the game gives us the local UDP port)
         string gameStateIp = gameState.Endpoint.Address.GetRealAddress().ToString();
 
-        if (_serverJoinService.LastServer?.Ip == gameStateIp)
+        if (_serverJoinService.LastServer?.Ip == gameStateIp && 
+            _serverJoinService.LastServer.Port == gameState.Endpoint.Port)
         {
-            // ip matches the last joined server
+            // ip + port matches the last joined server
             return new()
             {
                 Ip = _serverJoinService.LastServer.Ip,
@@ -145,7 +145,8 @@ public sealed class SocialClient : HubClient<ISocialHub>, ISocialClient, IDispos
         return new()
         {
             Ip = gameStateIp,
-            ServerName = _gameConfigProvider.CurrentConfigMp?.LastHostName,
+            PortGuess = gameState.Endpoint.Port,
+            ServerName = null, //_gameConfigProvider.CurrentConfig?.LastHostName,
         };
     }
 

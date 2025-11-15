@@ -15,7 +15,7 @@ public static class ApplicationSetup
             {
                 if (httpContext.Request.Headers.TryGetValue("X-App-Name", out var appNameValues) && appNameValues.Count != 0)
                 {
-                    diagnosticContext.Set("ClientAppName", appNameValues.FirstOrDefault());
+                    diagnosticContext.Set("ClientAppName", appNameValues[0] ?? "");
                 }
                 else
                 {
@@ -24,7 +24,7 @@ public static class ApplicationSetup
 
                 if (httpContext.Request.Headers.TryGetValue("X-App-Version", out var appVersionValues) && appVersionValues.Count != 0)
                 {
-                    diagnosticContext.Set("ClientAppVersion", appVersionValues.FirstOrDefault());
+                    diagnosticContext.Set("ClientAppVersion", appVersionValues[0] ?? "");
                 }
                 else
                 {

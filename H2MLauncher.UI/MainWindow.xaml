@@ -29,7 +29,7 @@
         StateChanged="Window_StateChanged"
         Icon="Assets/icon.ico"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        Title="HMW Hub">
+        Title="T7X Hub">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding CheckUpdateStatusCommand}"/>
@@ -167,7 +167,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Title -->
-                    <TextBlock Grid.Column="0" Text="HMW Hub" FontSize="30" FontWeight="Bold" Style="{DynamicResource TitleStyle}"/>
+                    <TextBlock Grid.Column="0" Text="T7X Hub" FontSize="30" FontWeight="Bold" Style="{DynamicResource TitleStyle}"/>
 
                     <!-- Socials -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,5,0,0">

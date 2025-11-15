@@ -21,7 +21,7 @@ public sealed class FpsLimiter : IDisposable
 {
     private readonly CompositeDisposable _disposables = [];
 
-    private readonly H2MCommunicationService _communicationService;
+    private readonly T7XCommunicationService _communicationService;
     private readonly IWritableOptions<H2MLauncherSettings> _options;
     private readonly ILogger<FpsLimiter> _logger;
 
@@ -81,7 +81,7 @@ public sealed class FpsLimiter : IDisposable
 
     public FpsLimiter(
         GameDirectoryService gameDirectoryService,
-        H2MCommunicationService communicationService,
+        T7XCommunicationService communicationService,
         IWritableOptions<H2MLauncherSettings> options,
         ILogger<FpsLimiter> logger)
     {
@@ -190,10 +190,11 @@ public sealed class FpsLimiter : IDisposable
                 .DistinctUntilChanged()
                 .TakeUntil(stopLimiterO)
                 .Finally(() => _logger.LogInformation("FPS limiter stopped."))
-                .SelectMany(values => Observable.FromAsync(() =>
+                .Select(values => Observable.FromAsync((ct) =>
                 {
-                    return ApplyFpsLimit(values.maxFps, values.isLimited);
+                    return ApplyFpsLimit(values.maxFps, values.isLimited, ct);
                 }))
+                .Switch()
                 .Subscribe(
                     _ => { },
                     ex => // OnError for the whole chain if something unexpected happens
@@ -245,7 +246,7 @@ public sealed class FpsLimiter : IDisposable
         return (maxFps, isLimited);
     }
 
-    private async Task ApplyFpsLimit(int maxFps, bool isLimited)
+    private async Task ApplyFpsLimit(int maxFps, bool isLimited, CancellationToken ct)
     {
         try
         {
@@ -270,6 +271,7 @@ public sealed class FpsLimiter : IDisposable
                 _limiterStatusSubject.OnNext(FpsLimiterStatus.Failed);
             }
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while changing max FPS.");
@@ -337,12 +339,12 @@ public sealed class FpsLimiter : IDisposable
     private static IObservable<int> CreateMaxFpsObservable(GameDirectoryService gameDirectoryService)
     {
         return Observable
-            .FromEvent<ConfigChangedEventHandler, ConfigMpContent?>(
+            .FromEvent<ConfigChangedEventHandler, ConfigIniContent?>(
                 (a) => (filePath, cfg) => a(cfg),
                 (h) => gameDirectoryService.ConfigMpChanged += h,
                 (h) => gameDirectoryService.ConfigMpChanged -= h
             )
-            .StartWith(gameDirectoryService.CurrentConfigMp)
+            .StartWith(gameDirectoryService.CurrentConfig)
             .Where(cfg => cfg is not null)
             .Select(cfg => cfg!.MaxFps)
             .DistinctUntilChanged();

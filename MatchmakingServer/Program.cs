@@ -76,13 +76,12 @@ builder.Services.AddHttpClient<HMWMasterService>()
     });
 
 builder.Services.AddTransient<IErrorHandlingService, LoggingErrorHandlingService>();
-builder.Services.AddKeyedSingleton<IMasterServerService, H2MServersService>("H2M");
-builder.Services.AddKeyedSingleton<IMasterServerService, HMWMasterService>("HMW");
-builder.Services.AddTransient<IMasterServerService, AggregatedMasterServerService>();
+builder.Services.AddTransient<IMasterServerService, T7XMasterService>();
 
 builder.Services.AddTransient<UdpGameServerCommunication>();
 builder.Services.AddSingleton<GameServerCommunicationService<GameServer>>();
-builder.Services.AddTransient<IGameServerInfoService<GameServer>, HttpGameServerInfoService<GameServer>>();
+builder.Services.AddTransient<IGameServerInfoService<GameServer>>((sp) =>
+    sp.GetRequiredService<GameServerCommunicationService<GameServer>>());
 
 builder.Services.AddKeyedSingleton<IGameServerStatusService<GameServer>>("UDP", (sp, key) =>
     sp.GetRequiredService<GameServerCommunicationService<GameServer>>());

@@ -1,18 +1,16 @@
-# HMW Hub: Queue, Party, Connect (formerly H2M-Launcher)
+# T7X Hub: Queue, Party, Connect (fork of [HMW-Hub](https://github.com/Bowhza/HMW-Hub) (fka H2M-Launcher))
 
-**This launcher aims to provide features like server queueing, friends and party system to HorizonMW. The project originally started out to address some issues of the in-game server browser in the legacy H2M.**
+**This launcher aims to provide features like server queueing, friends and party system to T7X. The project originally started out to address some issues of the in-game server browser in the legacy H2M.**
 
-[<img src="https://img.shields.io/github/v/release/Bowhza/H2M-Launcher">](https://github.com/Bowhza/H2M-Launcher/releases)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Bowhza/H2M-Launcher/total)
+[<img src="https://img.shields.io/github/v/release/tobibodamer/t7x-hub">](https://github.com/tobibodamer/t7x-hub/releases)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/tobibodamer/t7x-hub/total)
 
 ### **Discord for HMW Hub**
-
-**Join if you want to stay up-to-date with the launcher, have questions, suggestions, or looking for people to play HMW with.**
 
 [<img src="https://img.shields.io/discord/1276483126041776192?logo=discord&logoColor=%23FFFFFF&label=Discord&labelColor=%235865F2&link=https%3A%2F%2Fdiscord.gg%2FNeBYKxq5Ru">](https://discord.com/invite/NeBYKxq5Ru)
 
 
-<img src="./Images/H2MLauncher.png">
+<img src="./Images/Launcher.png">
 
 ## Features
 
@@ -130,9 +128,9 @@ Pending friend requests will appear in the **Requests** tab and can be accepted 
 
 ## Instructions
 
-1. Download the latest release from **[HERE](https://github.com/Bowhza/H2M-Launcher/releases)**.
+1. Download the latest release from **[HERE](https://github.com/tobibodamer/t7x-hub/releases)**.
 
-2. Paste the `H2M-Launcher.UI.exe` inside the root of the game directory and run it.
+2. Paste the `t7x-hub.exe` inside the root of the game directory and run it.
 
 <img src="./Images/Directory.png">
 
@@ -165,7 +163,7 @@ This section will try to address most common issues people may encouter while us
 
 ### 1. Log Files
 
-The log files can be found in the following directory: `%localappdata%\BetterH2MLauncher`
+The log files can be found in the following directory: `%localappdata%\t7x-hub`
 
 Fastest way to access the directory is by pressing `Win + R` to open the run menu and paste the directory in the `Open` text box.
 
@@ -206,7 +204,7 @@ Go to your Windows Settings and search for Clear Clipboard.
 
 <img src="./Images/Config-Fail.png">
 
-**Answer**: Delete the `launchersettings.json` file located at `C:\Users\<YourUserName>\AppData\Local\BetterH2MLauncher`. After deleting the json file, next time you launch the exe it should be created again.
+**Answer**: Delete the `launchersettings.json` file located at `C:\Users\<YourUserName>\AppData\Local\t7x-hub`. After deleting the json file, next time you launch the exe it should be created again.
 
 ### 7. Game is not detected / "Error launching hmw-mod"
 

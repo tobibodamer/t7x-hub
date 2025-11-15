@@ -1,120 +1,120 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+        <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="appsettings.json" />
-    <None Remove="Assets\Background.jpg" />
-    <None Remove="Assets\discord-logo-blue.png" />
-    <None Remove="Assets\discord-logo-white.png" />
-    <None Remove="Assets\discord-mark-blue.png" />
-    <None Remove="Assets\discord-mark-white.png" />
-    <None Remove="Assets\discord.svg" />
-    <None Remove="Assets\github-mark-white.png" />
-    <None Remove="Assets\GitHub_Logo_White.png" />
-    <None Remove="Assets\h2m.png" />
-    <None Remove="Assets\hmw.png" />
-    <None Remove="Assets\Icon.ico" />
-    <None Remove="Themes\Nyan\back.jpg" />
-    <None Remove="Themes\Nyan\icon.jpg" />
-    <None Remove="Themes\Nyan\metadata.json" />
-    <None Remove="Themes\Nyan\nian-cat.gif" />
-    <None Remove="Themes\Nyan\nyan-cat-cat.gif" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="appsettings.json" />
+        <None Remove="Assets\Background.jpg" />
+        <None Remove="Assets\discord-logo-blue.png" />
+        <None Remove="Assets\discord-logo-white.png" />
+        <None Remove="Assets\discord-mark-blue.png" />
+        <None Remove="Assets\discord-mark-white.png" />
+        <None Remove="Assets\discord.svg" />
+        <None Remove="Assets\github-mark-white.png" />
+        <None Remove="Assets\GitHub_Logo_White.png" />
+        <None Remove="Assets\h2m.png" />
+        <None Remove="Assets\hmw.png" />
+        <None Remove="Assets\Icon.ico" />
+        <None Remove="Themes\Nyan\back.jpg" />
+        <None Remove="Themes\Nyan\icon.jpg" />
+        <None Remove="Themes\Nyan\metadata.json" />
+        <None Remove="Themes\Nyan\nian-cat.gif" />
+        <None Remove="Themes\Nyan\nyan-cat-cat.gif" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Page Remove="GlobalResources.xaml" />
-    <Page Remove="Themes\Nyan\Nyan.xaml" />
-  </ItemGroup>
+    <ItemGroup>
+        <Page Remove="GlobalResources.xaml" />
+        <Page Remove="Themes\Nyan\Nyan.xaml" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
-    <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
-    <PackageReference Include="MvvmDialogs" Version="9.1.2" />
-    <PackageReference Include="NHotkey.Wpf" Version="3.0.0" />
-    <PackageReference Include="Nogic.WritableOptions" Version="3.1.0" />
-    <PackageReference Include="Serilog" Version="4.0.2" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-    <PackageReference Include="XamlAnimatedGif" Version="2.3.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="Humanizer.Core" Version="2.14.1" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+        <PackageReference Include="MvvmDialogs" Version="9.1.2" />
+        <PackageReference Include="NHotkey.Wpf" Version="3.0.0" />
+        <PackageReference Include="Nogic.WritableOptions" Version="3.1.0" />
+        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageReference Include="XamlAnimatedGif" Version="2.3.1" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\H2MLauncher.Core\H2MLauncher.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\H2MLauncher.Core\H2MLauncher.Core.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Condition="Exists('appsettings.local.json')" Include="appsettings.local.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <EmbeddedResource Include="appsettings.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <Resource Include="Assets\github-mark-white.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\Background.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\discord-logo-blue.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\discord-logo-white.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\discord-mark-blue.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\discord-mark-white.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\GitHub_Logo_White.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\h2m.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\hmw.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\Icon.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="GlobalResources.xaml" />
-    <Resource Include="Themes\Nyan\back.jpg" />
-    <Resource Include="Themes\Nyan\icon.jpg" />
-    <Resource Include="Themes\Nyan\metadata.json" />
-    <Resource Include="Themes\Nyan\nian-cat.gif" />
-    <Resource Include="Themes\Nyan\nyan-cat-cat.gif" />
-    <Resource Include="Themes\Nyan\Nyan.xaml" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Condition="Exists('appsettings.local.json')" Include="appsettings.local.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <EmbeddedResource Include="appsettings.json">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </EmbeddedResource>
+        <Resource Include="Assets\Background.jpg">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\github-mark-white.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\discord-logo-blue.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\discord-logo-white.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\discord-mark-blue.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\discord-mark-white.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\GitHub_Logo_White.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\h2m.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\hmw.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Assets\Icon.ico">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="GlobalResources.xaml" />
+        <Resource Include="Themes\Nyan\back.jpg" />
+        <Resource Include="Themes\Nyan\icon.jpg" />
+        <Resource Include="Themes\Nyan\metadata.json" />
+        <Resource Include="Themes\Nyan\nian-cat.gif" />
+        <Resource Include="Themes\Nyan\nyan-cat-cat.gif" />
+        <Resource Include="Themes\Nyan\Nyan.xaml" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="ViewModels\PasswordViewModel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="ViewModels\PasswordViewModel.cs">
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
 
 </Project>

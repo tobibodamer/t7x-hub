@@ -11,9 +11,9 @@ using Nogic.WritableOptions;
 
 namespace H2MLauncher.Core.Game
 {
-    public sealed class H2MGameDetectionService : IGameDetectionService
+    public sealed class T7XGameDetectionService : IGameDetectionService
     {
-        private readonly ILogger<H2MGameDetectionService> _logger;
+        private readonly ILogger<T7XGameDetectionService> _logger;
         private readonly IWritableOptions<H2MLauncherSettings> _h2mLauncherSettings;
         private readonly IGameCommunicationService _gameCommunicationService;
 
@@ -24,8 +24,8 @@ namespace H2MLauncher.Core.Game
         private Task? _gameDetectionTask;
         private bool _isRunning;
 
-        public H2MGameDetectionService(
-            ILogger<H2MGameDetectionService> logger,
+        public T7XGameDetectionService(
+            ILogger<T7XGameDetectionService> logger,
             IWritableOptions<H2MLauncherSettings> h2mLauncherSettings,
             IGameCommunicationService gameCommunicationService)
         {
@@ -123,7 +123,7 @@ namespace H2MLauncher.Core.Game
             _logger.LogInformation("Detected game {gameProcessName} (v{gameVersion})",
                 detectedGame.Process.ProcessName, detectedGame.Version.ToString());
 
-            if (string.IsNullOrEmpty(_h2mLauncherSettings.CurrentValue.MWRLocation))
+            if (string.IsNullOrEmpty(_h2mLauncherSettings.CurrentValue.GameLocation))
             {
                 _logger.LogDebug("Game location empty, setting to {gameLocation}", detectedGame.FileName);
 
@@ -131,7 +131,7 @@ namespace H2MLauncher.Core.Game
                 {
                     return settings with
                     {
-                        MWRLocation = detectedGame.FileName
+                        GameLocation = detectedGame.FileName
                     };
                 });
             }
@@ -161,7 +161,7 @@ namespace H2MLauncher.Core.Game
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                Process? process = H2MCommunicationService.FindH2MModProcess();
+                Process? process = T7XCommunicationService.FindProcess();
                 if (process is null || process.MainModule is null)
                 {
                     goto delay;

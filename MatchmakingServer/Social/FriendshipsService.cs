@@ -36,7 +36,7 @@ public sealed class FriendshipsService(
             .ToListAsync();
     }
 
-    private Task<Dictionary<UserDbo, FriendshipDbo>> GetFriendRelationsAsync(Guid userId, FriendshipStatus[] status, CancellationToken cancellationToken)
+    private Task<Dictionary<UserDbo, FriendshipDbo>> GetFriendRelationsAsync(Guid userId, List<FriendshipStatus> status, CancellationToken cancellationToken)
     {
         return _dbContext.UserFriendships
             .Include(r => r.FromUser)

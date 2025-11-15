@@ -49,7 +49,7 @@ public partial class SettingsViewModel : DialogViewModelBase
     public SettingsViewModel(IWritableOptions<H2MLauncherSettings> options)
     {
         // init properties from settings
-        MwrLocation = options.CurrentValue.MWRLocation;
+        MwrLocation = options.CurrentValue.GameLocation;
         HmwMasterServerUrl = options.CurrentValue.HMWMasterServerUrl;
         GameCommunicationEnabled = options.CurrentValue.GameMemoryCommunication;
         ServerQueueingEnabled = options.CurrentValue.ServerQueueing;
@@ -66,7 +66,7 @@ public partial class SettingsViewModel : DialogViewModelBase
             options.Update((settings) => settings with
             {
                 HMWMasterServerUrl = HmwMasterServerUrl,
-                MWRLocation = MwrLocation,
+                GameLocation = MwrLocation,
                 GameMemoryCommunication = GameCommunicationEnabled,
                 ServerQueueing = ServerQueueingEnabled,
                 KeyBindings = Shortcuts.ToDictionary(),
