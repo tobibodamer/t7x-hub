@@ -55,7 +55,7 @@ namespace H2MLauncher.Core.Services
         {
             get
             {
-                return Assembly.GetEntryAssembly()!.GetName().Name ?? "t7x-hub";
+                return "t7x-hub";
             }
         }
 
