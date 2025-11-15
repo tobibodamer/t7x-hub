@@ -5,7 +5,7 @@
 [<img src="https://img.shields.io/github/v/release/tobibodamer/t7x-hub">](https://github.com/tobibodamer/t7x-hub/releases)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/tobibodamer/t7x-hub/total)
 
-### **Discord for HMW Hub**
+### **Discord**
 
 [<img src="https://img.shields.io/discord/1276483126041776192?logo=discord&logoColor=%23FFFFFF&label=Discord&labelColor=%235865F2&link=https%3A%2F%2Fdiscord.gg%2FNeBYKxq5Ru">](https://discord.com/invite/NeBYKxq5Ru)
 
@@ -27,7 +27,7 @@
 
 ### Server Browser
 
-- Launch HorizonMW.
+- Launch T7X.
 - Displays the server count and the total players.
 - Join other servers without having to disconnect first.
 - Sort servers by **name, map, mode, player count, and ping**.
@@ -134,12 +134,12 @@ Pending friend requests will appear in the **Requests** tab and can be accepted 
 
 <img src="./Images/Directory.png">
 
-- **If you want to store the launcher elsewhere**, you can set the path to the `hmw-mod.exe` in the settings or start the game so it can be detected.
+- **If you want to store the launcher elsewhere**, you can set the path to the `t7x.exe` in the settings or start the game so it can be detected.
 - Click the settings icon in the bottom right corner of the launcher, and you should see the `Game Location` option that you can change.
 
 <img src="./Images/Settings-Modal.png">
 
-1. Before using the server browser make sure HMW is running. You can press `Launch Game` to run the game.
+1. Before using the server browser make sure T7X is running. You can press `Launch Game` to run the game.
 
 2. Find a server you want to play on, select it, and press the join button. The HMW window should automatically be set as the foreground window.
 
@@ -147,7 +147,7 @@ Pending friend requests will appear in the **Requests** tab and can be accepted 
 
 | Keyboard/Mouse    | Description                              |
 | :---------------- | :--------------------------------------- |
-| `ESC`             | Close the HMW Hub.                       |
+| `ESC`             | Close the T7X Hub.                       |
 | `TAB`             | Navigate between launcher controls.      |
 | `F5`              | Refresh the server list.                 |
 | `ENTER`           | Join the selected server.                |
@@ -211,13 +211,6 @@ Go to your Windows Settings and search for Clear Clipboard.
 **Answer**: The mod executable may require administrator privileges to start, so the launcher fails to start or detect it.
 Try to start the launcher with admin privileges too.
 
-### 8. "Connection failed: Invalid protocol" when joining a server
-
-<img src="./Images/ErrorInvalidProtocol.png">
-
-**Answer**: You are probably still running H2M and trying to join a HMW server, which is incompatible.
-Unfortunately, H2M is dead and all servers switched to HMW, so you have to [download HorizonMW](https://horizonmw.org/download.html).
-
 > [!IMPORTANT]
 > **If you encounter any issues not addressed here, please create an issue so it can be resolved and added to the FAQ if needed.**
 > 
@@ -234,8 +227,3 @@ dotnet publish -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesFor
 ```
 
 3. The executable should now be found under `bin/Release/net8.0/win-x64/publish` and you can copy it into your game directory from there.
-
-## 📸 Credits
-
-- **Background image edited by [JXNPlays](https://www.youtube.com/@jxnplays)** <br/>
-Based on [this original wallpaper](https://www.reddit.com/r/CallOfDuty/comments/4hhmc2/made_a_wallpaper_out_of_my_mwr_cover/)

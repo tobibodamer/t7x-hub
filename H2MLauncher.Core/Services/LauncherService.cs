@@ -25,7 +25,7 @@ namespace H2MLauncher.Core.Services
 
         // IMPORTANT: Set this to the same pre-release label used in GitHub
         // (appended like '-beta') or empty when this is a normal release!
-        public static readonly string CurrentPreReleaseLabel = "";
+        public static readonly string CurrentPreReleaseLabel = "beta";
         public static string CurrentVersion
         {
             get
@@ -109,6 +109,7 @@ namespace H2MLauncher.Core.Services
                 string? tagName = doc.RootElement.EnumerateArray()
                     .Where(e => e.GetProperty("target_commitish").ToString() == CurrentBranch)
                     .Select(e => e.GetProperty("tag_name").ToString())
+                    .Where(tag => tag.StartsWith("T7X-v"))
                     .FirstOrDefault();
 
                 if (tagName == null)
@@ -136,7 +137,7 @@ namespace H2MLauncher.Core.Services
 
         public async Task<bool> UpdateLauncherToLatestVersion(Action<double> progress, CancellationToken cancellationToken)
         {
-            string downloadUrl = $"https://github.com/Bowhza/H2M-Launcher/releases/download/{LatestKnownVersion}/{AssemblyName}.exe";
+            string downloadUrl = $"https://github.com/tobibodamer/t7x-hub/releases/download/{LatestKnownVersion}/{AssemblyName}.exe";
 
             try
             {
